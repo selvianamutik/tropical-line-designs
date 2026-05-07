@@ -1,0 +1,16 @@
+.tmp/
+.env
+.env.*
+credentials.json
+token.json
+__pycache__/
+*.pyc
+.next/
+node_modules/
+dist/
+
+.vercel
+supabase/authorization.txt
+directives/*
+execution/*
+.agents/*
