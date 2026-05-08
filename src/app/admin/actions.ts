@@ -2,70 +2,86 @@
 
 import { revalidatePath } from "next/cache";
 import { supabaseAdmin } from "@/lib/db";
-
-function requiredString(formData: FormData, key: string) {
-  const value = formData.get(key);
-  if (typeof value !== "string" || !value.trim()) {
-    throw new Error(`Field "${key}" is required.`);
-  }
-  return value.trim();
-}
-
-function optionalString(formData: FormData, key: string) {
-  const value = formData.get(key);
-  if (typeof value !== "string") {
-    return null;
-  }
-  const trimmed = value.trim();
-  return trimmed ? trimmed : null;
-}
-
-function optionalNumber(formData: FormData, key: string) {
-  const value = formData.get(key);
-  if (typeof value !== "string" || !value.trim()) {
-    return 0;
-  }
-  return Number(value);
-}
-
-function slugify(value: string) {
-  return value
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
-}
+import {
+  MEMBER_STATUSES,
+  PROJECT_STATUSES,
+  optionalHttpUrl,
+  optionalMonthValue,
+  optionalNonNegativeInteger,
+  optionalText,
+  requiredEmail,
+  requiredEnumValue,
+  requiredText,
+  requiredYear,
+  slugifyOrThrow,
+} from "@/lib/admin/validation";
+import {
+  emptyImageColumns,
+  getOptionalImageFile,
+  removeEntityImage,
+  uploadEntityImage,
+} from "@/lib/admin/media";
 
 export async function upsertPortfolio(formData: FormData) {
-  const id = optionalString(formData, "id");
-  const title = requiredString(formData, "title");
-  
-  // Clean empty strings for commenced_at
-  let commenced_at = optionalString(formData, "commenced_at");
-  if (commenced_at === "") commenced_at = null;
+  const id = optionalText(formData, "id", { maxLength: 64 });
+  const title = requiredText(formData, "title", { minLength: 2, maxLength: 160 });
+  const recordId = id ?? crypto.randomUUID();
+  const imageFile = getOptionalImageFile(formData, "image_file");
+  const existingRecord = id
+    ? await supabaseAdmin.from("portfolios").select("image_path").eq("id", id).maybeSingle()
+    : null;
+
+  if (existingRecord?.error) {
+    throw existingRecord.error;
+  }
 
   const payload = {
+    id: recordId,
     title,
-    slug: slugify(title),
-    location: requiredString(formData, "location"),
-    status: requiredString(formData, "status"),
-    commenced_at,
-    client: optionalString(formData, "client"),
-    category: optionalString(formData, "category"),
-    description: optionalString(formData, "description"),
-    image_url: optionalString(formData, "image_url"),
+    slug: slugifyOrThrow(title),
+    location: requiredText(formData, "location", { minLength: 2, maxLength: 160 }),
+    status: requiredEnumValue(formData, "status", PROJECT_STATUSES),
+    commenced_at: optionalMonthValue(formData, "commenced_at"),
+    client: optionalText(formData, "client", { maxLength: 160 }),
+    category: optionalText(formData, "category", { maxLength: 120 }),
+    description: optionalText(formData, "description", { maxLength: 4000, allowMultiline: true }),
+    ...emptyImageColumns(),
   };
+  let mutationPayload: typeof payload = payload;
+  if (imageFile) {
+    const uploadedImage = await uploadEntityImage({
+      owner: "portfolios",
+      recordId,
+      slugSource: title,
+      file: imageFile,
+    });
+    mutationPayload = { ...payload, ...uploadedImage };
+  } else if (id) {
+    const { id: _id, image_bucket: _bucket, image_path: _path, image_url: _url, image_mime_type: _mime, image_size_bytes: _size, ...rest } = payload;
+    void _id;
+    void _bucket;
+    void _path;
+    void _url;
+    void _mime;
+    void _size;
+    mutationPayload = rest as typeof payload;
+  }
 
   if (id) {
     const { error } = await supabaseAdmin
       .from("portfolios")
-      .update(payload)
+      .update(mutationPayload)
       .eq("id", id);
     if (error) throw error;
   } else {
     const { error } = await supabaseAdmin
       .from("portfolios")
-      .insert([payload]);
+      .insert([mutationPayload]);
     if (error) throw error;
+  }
+
+  if (imageFile && existingRecord?.data?.image_path) {
+    await removeEntityImage(existingRecord.data.image_path);
   }
 
   revalidatePath("/admin");
@@ -73,39 +89,76 @@ export async function upsertPortfolio(formData: FormData) {
 }
 
 export async function deletePortfolio(formData: FormData) {
-  const id = requiredString(formData, "id");
+  const id = requiredText(formData, "id", { maxLength: 64 });
+  const existingRecord = await supabaseAdmin.from("portfolios").select("image_path").eq("id", id).maybeSingle();
+  if (existingRecord.error) throw existingRecord.error;
   const { error } = await supabaseAdmin
     .from("portfolios")
     .delete()
     .eq("id", id);
   
   if (error) throw error;
+  await removeEntityImage(existingRecord.data?.image_path);
 
   revalidatePath("/admin");
   revalidatePath("/admin/projects");
 }
 
 export async function upsertTeamMember(formData: FormData) {
-  const id = optionalString(formData, "id");
+  const id = optionalText(formData, "id", { maxLength: 64 });
+  const recordId = id ?? crypto.randomUUID();
+  const imageFile = getOptionalImageFile(formData, "image_file");
+  const existingRecord = id
+    ? await supabaseAdmin.from("team_members").select("image_path").eq("id", id).maybeSingle()
+    : null;
+
+  if (existingRecord?.error) {
+    throw existingRecord.error;
+  }
+
   const payload = {
-    name: requiredString(formData, "name"),
-    role: requiredString(formData, "role"),
-    email: requiredString(formData, "email"),
-    status: requiredString(formData, "status"),
-    image_url: optionalString(formData, "image_url"),
+    id: recordId,
+    name: requiredText(formData, "name", { minLength: 2, maxLength: 160 }),
+    role: requiredText(formData, "role", { minLength: 2, maxLength: 120 }),
+    email: requiredEmail(formData, "email"),
+    status: requiredEnumValue(formData, "status", MEMBER_STATUSES),
+    ...emptyImageColumns(),
   };
+  let mutationPayload: typeof payload = payload;
+  if (imageFile) {
+    const uploadedImage = await uploadEntityImage({
+      owner: "team_members",
+      recordId,
+      slugSource: payload.name,
+      file: imageFile,
+    });
+    mutationPayload = { ...payload, ...uploadedImage };
+  } else if (id) {
+    const { id: _id, image_bucket: _bucket, image_path: _path, image_url: _url, image_mime_type: _mime, image_size_bytes: _size, ...rest } = payload;
+    void _id;
+    void _bucket;
+    void _path;
+    void _url;
+    void _mime;
+    void _size;
+    mutationPayload = rest as typeof payload;
+  }
 
   if (id) {
     const { error } = await supabaseAdmin
       .from("team_members")
-      .update(payload)
+      .update(mutationPayload)
       .eq("id", id);
     if (error) throw error;
   } else {
     const { error } = await supabaseAdmin
       .from("team_members")
-      .insert([payload]);
+      .insert([mutationPayload]);
     if (error) throw error;
+  }
+
+  if (imageFile && existingRecord?.data?.image_path) {
+    await removeEntityImage(existingRecord.data.image_path);
   }
 
   revalidatePath("/admin");
@@ -113,38 +166,76 @@ export async function upsertTeamMember(formData: FormData) {
 }
 
 export async function deleteTeamMember(formData: FormData) {
-  const id = requiredString(formData, "id");
+  const id = requiredText(formData, "id", { maxLength: 64 });
+  const existingRecord = await supabaseAdmin.from("team_members").select("image_path").eq("id", id).maybeSingle();
+  if (existingRecord.error) throw existingRecord.error;
   const { error } = await supabaseAdmin
     .from("team_members")
     .delete()
     .eq("id", id);
     
   if (error) throw error;
+  await removeEntityImage(existingRecord.data?.image_path);
 
   revalidatePath("/admin");
   revalidatePath("/admin/team");
 }
 
 export async function upsertCollaborator(formData: FormData) {
-  const id = optionalString(formData, "id");
+  const id = optionalText(formData, "id", { maxLength: 64 });
+  const recordId = id ?? crypto.randomUUID();
+  const imageFile = getOptionalImageFile(formData, "image_file");
+  const existingRecord = id
+    ? await supabaseAdmin.from("collaborators").select("image_path").eq("id", id).maybeSingle()
+    : null;
+
+  if (existingRecord?.error) {
+    throw existingRecord.error;
+  }
+
   const payload = {
-    company: requiredString(formData, "company"),
-    expertise_type: requiredString(formData, "expertise_type"),
-    contact_email: requiredString(formData, "contact_email"),
-    joint_projects: optionalNumber(formData, "joint_projects"),
+    id: recordId,
+    company: requiredText(formData, "company", { minLength: 2, maxLength: 160 }),
+    expertise_type: requiredText(formData, "expertise_type", { minLength: 2, maxLength: 120 }),
+    contact_email: requiredEmail(formData, "contact_email"),
+    joint_projects: optionalNonNegativeInteger(formData, "joint_projects", { max: 100000 }),
+    ...emptyImageColumns(),
   };
+  let mutationPayload: typeof payload = payload;
+  if (imageFile) {
+    const uploadedImage = await uploadEntityImage({
+      owner: "collaborators",
+      recordId,
+      slugSource: payload.company,
+      file: imageFile,
+    });
+    mutationPayload = { ...payload, ...uploadedImage };
+  } else if (id) {
+    const { id: _id, image_bucket: _bucket, image_path: _path, image_url: _url, image_mime_type: _mime, image_size_bytes: _size, ...rest } = payload;
+    void _id;
+    void _bucket;
+    void _path;
+    void _url;
+    void _mime;
+    void _size;
+    mutationPayload = rest as typeof payload;
+  }
 
   if (id) {
     const { error } = await supabaseAdmin
       .from("collaborators")
-      .update(payload)
+      .update(mutationPayload)
       .eq("id", id);
     if (error) throw error;
   } else {
     const { error } = await supabaseAdmin
       .from("collaborators")
-      .insert([payload]);
+      .insert([mutationPayload]);
     if (error) throw error;
+  }
+
+  if (imageFile && existingRecord?.data?.image_path) {
+    await removeEntityImage(existingRecord.data.image_path);
   }
 
   revalidatePath("/admin");
@@ -152,38 +243,76 @@ export async function upsertCollaborator(formData: FormData) {
 }
 
 export async function deleteCollaborator(formData: FormData) {
-  const id = requiredString(formData, "id");
+  const id = requiredText(formData, "id", { maxLength: 64 });
+  const existingRecord = await supabaseAdmin.from("collaborators").select("image_path").eq("id", id).maybeSingle();
+  if (existingRecord.error) throw existingRecord.error;
   const { error } = await supabaseAdmin
     .from("collaborators")
     .delete()
     .eq("id", id);
     
   if (error) throw error;
+  await removeEntityImage(existingRecord.data?.image_path);
 
   revalidatePath("/admin");
   revalidatePath("/admin/collaborators");
 }
 
 export async function upsertAward(formData: FormData) {
-  const id = optionalString(formData, "id");
+  const id = optionalText(formData, "id", { maxLength: 64 });
+  const recordId = id ?? crypto.randomUUID();
+  const imageFile = getOptionalImageFile(formData, "image_file");
+  const existingRecord = id
+    ? await supabaseAdmin.from("awards").select("image_path").eq("id", id).maybeSingle()
+    : null;
+
+  if (existingRecord?.error) {
+    throw existingRecord.error;
+  }
+
   const payload = {
-    title: requiredString(formData, "title"),
-    organization: requiredString(formData, "organization"),
-    award_year: optionalNumber(formData, "award_year"),
-    related_project: optionalString(formData, "related_project"),
+    id: recordId,
+    title: requiredText(formData, "title", { minLength: 2, maxLength: 160 }),
+    organization: requiredText(formData, "organization", { minLength: 2, maxLength: 160 }),
+    award_year: requiredYear(formData, "award_year"),
+    related_project: optionalText(formData, "related_project", { maxLength: 160 }),
+    ...emptyImageColumns(),
   };
+  let mutationPayload: typeof payload = payload;
+  if (imageFile) {
+    const uploadedImage = await uploadEntityImage({
+      owner: "awards",
+      recordId,
+      slugSource: payload.title,
+      file: imageFile,
+    });
+    mutationPayload = { ...payload, ...uploadedImage };
+  } else if (id) {
+    const { id: _id, image_bucket: _bucket, image_path: _path, image_url: _url, image_mime_type: _mime, image_size_bytes: _size, ...rest } = payload;
+    void _id;
+    void _bucket;
+    void _path;
+    void _url;
+    void _mime;
+    void _size;
+    mutationPayload = rest as typeof payload;
+  }
 
   if (id) {
     const { error } = await supabaseAdmin
       .from("awards")
-      .update(payload)
+      .update(mutationPayload)
       .eq("id", id);
     if (error) throw error;
   } else {
     const { error } = await supabaseAdmin
       .from("awards")
-      .insert([payload]);
+      .insert([mutationPayload]);
     if (error) throw error;
+  }
+
+  if (imageFile && existingRecord?.data?.image_path) {
+    await removeEntityImage(existingRecord.data.image_path);
   }
 
   revalidatePath("/admin");
@@ -191,13 +320,16 @@ export async function upsertAward(formData: FormData) {
 }
 
 export async function deleteAward(formData: FormData) {
-  const id = requiredString(formData, "id");
+  const id = requiredText(formData, "id", { maxLength: 64 });
+  const existingRecord = await supabaseAdmin.from("awards").select("image_path").eq("id", id).maybeSingle();
+  if (existingRecord.error) throw existingRecord.error;
   const { error } = await supabaseAdmin
     .from("awards")
     .delete()
     .eq("id", id);
     
   if (error) throw error;
+  await removeEntityImage(existingRecord.data?.image_path);
 
   revalidatePath("/admin");
   revalidatePath("/admin/awards");
@@ -206,12 +338,12 @@ export async function deleteAward(formData: FormData) {
 export async function updateSiteSettings(formData: FormData) {
   const payload = {
     id: "default",
-    studio_name: requiredString(formData, "studio_name"),
-    contact_email: requiredString(formData, "contact_email"),
-    phone_number: requiredString(formData, "phone_number"),
-    office_address: requiredString(formData, "office_address"),
-    instagram_handle: optionalString(formData, "instagram_handle"),
-    linkedin_url: optionalString(formData, "linkedin_url"),
+    studio_name: requiredText(formData, "studio_name", { minLength: 2, maxLength: 160 }),
+    contact_email: requiredEmail(formData, "contact_email"),
+    phone_number: requiredText(formData, "phone_number", { minLength: 6, maxLength: 50 }),
+    office_address: requiredText(formData, "office_address", { minLength: 6, maxLength: 500, allowMultiline: true }),
+    instagram_handle: optionalText(formData, "instagram_handle", { maxLength: 100 }),
+    linkedin_url: optionalHttpUrl(formData, "linkedin_url"),
     updated_at: new Date().toISOString(),
   };
 

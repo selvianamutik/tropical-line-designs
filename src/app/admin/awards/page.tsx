@@ -27,6 +27,13 @@ export default async function AwardsPage() {
             { name: "organization", label: "Issuing Organization", required: true, placeholder: "e.g. Asia Pacific Property Awards" },
             { name: "award_year", label: "Year", type: "number", required: true, min: 1900, max: 2099, placeholder: "2024" },
             { name: "related_project", label: "Related Project", placeholder: "e.g. Oasis Villa" },
+            {
+              name: "image_file",
+              label: "Award Image",
+              type: "file",
+              accept: "image/jpeg,image/png,image/webp,image/avif",
+              helpText: "Upload a JPG, PNG, WebP, or AVIF image up to 10MB.",
+            },
           ]}
         />
       }
@@ -72,6 +79,15 @@ export default async function AwardsPage() {
                         { name: "organization", label: "Issuing Organization", required: true, defaultValue: award.organization },
                         { name: "award_year", label: "Year", type: "number", required: true, min: 1900, max: 2099, defaultValue: award.award_year },
                         { name: "related_project", label: "Related Project", defaultValue: award.related_project },
+                        {
+                          name: "image_file",
+                          label: "Award Image",
+                          type: "file",
+                          accept: "image/jpeg,image/png,image/webp,image/avif",
+                          helpText: award.image_url
+                            ? `Leave empty to keep the current image. Current: ${award.image_url}`
+                            : "Leave empty if you do not want to add an image yet.",
+                        },
                       ]}
                     />
                     <DeleteResourceForm id={award.id} label={`Delete ${award.title}`} action={deleteAward} />

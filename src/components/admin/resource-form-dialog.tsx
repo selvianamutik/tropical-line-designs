@@ -11,13 +11,15 @@ import { cn } from "@/lib/utils";
 interface FormField {
   name: string;
   label: string;
-  type?: "text" | "email" | "number" | "month" | "textarea" | "select";
+  type?: "text" | "email" | "number" | "month" | "textarea" | "select" | "file";
   placeholder?: string;
   defaultValue?: string | number | null;
   required?: boolean;
   min?: number;
   max?: number;
   options?: { label: string; value: string }[];
+  accept?: string;
+  helpText?: string;
 }
 
 interface ResourceFormDialogProps {
@@ -62,6 +64,7 @@ export function ResourceFormDialog({
 
       <Modal isOpen={isOpen} onClose={() => setIsOpen(false)} title={title} description={description}>
         <form
+          encType="multipart/form-data"
           action={async (formData) => {
             await action(formData);
             setIsOpen(false);
@@ -103,6 +106,18 @@ export function ResourceFormDialog({
                       <svg className="h-4 w-4 fill-current" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
                     </div>
                   </div>
+                ) : field.type === "file" ? (
+                  <div className="space-y-2">
+                    <Input
+                      name={field.name}
+                      type="file"
+                      required={field.required}
+                      accept={field.accept}
+                    />
+                    {field.helpText ? (
+                      <p className="text-[11px] text-[#8a867f]">{field.helpText}</p>
+                    ) : null}
+                  </div>
                 ) : (
                   <Input
                     name={field.name}
@@ -114,6 +129,9 @@ export function ResourceFormDialog({
                     max={field.max}
                   />
                 )}
+                {field.type !== "file" && field.helpText ? (
+                  <p className="text-[11px] text-[#8a867f]">{field.helpText}</p>
+                ) : null}
               </div>
             ))}
           </div>

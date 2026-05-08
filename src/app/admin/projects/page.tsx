@@ -42,7 +42,13 @@ export default async function ProjectManagerPage() {
             { name: "commenced_at", label: "Commenced Date", type: "month" },
             { name: "client", label: "Client", placeholder: "e.g. Private Client" },
             { name: "category", label: "Category", placeholder: "e.g. Hospitality" },
-            { name: "image_url", label: "Cover Image URL", placeholder: "https://..." },
+            {
+              name: "image_file",
+              label: "Cover Image",
+              type: "file",
+              accept: "image/jpeg,image/png,image/webp,image/avif",
+              helpText: "Upload a JPG, PNG, WebP, or AVIF image up to 10MB.",
+            },
             { name: "description", label: "Description", type: "textarea", placeholder: "Project summary..." },
           ]}
         />
@@ -105,7 +111,15 @@ export default async function ProjectManagerPage() {
                         { name: "commenced_at", label: "Commenced Date", type: "month", defaultValue: toMonthInputValue(project.commenced_at) },
                         { name: "client", label: "Client", defaultValue: project.client },
                         { name: "category", label: "Category", defaultValue: project.category },
-                        { name: "image_url", label: "Cover Image URL", defaultValue: project.image_url },
+                        {
+                          name: "image_file",
+                          label: "Cover Image",
+                          type: "file",
+                          accept: "image/jpeg,image/png,image/webp,image/avif",
+                          helpText: project.image_url
+                            ? `Leave empty to keep the current image. Current: ${project.image_url}`
+                            : "Leave empty if you do not want to add an image yet.",
+                        },
                         { name: "description", label: "Description", type: "textarea", defaultValue: project.description },
                       ]}
                     />

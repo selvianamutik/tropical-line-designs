@@ -25,6 +25,13 @@ export default async function TeamDirectoryPage() {
             { name: "name", label: "Full Name", required: true, placeholder: "e.g. John Doe" },
             { name: "email", label: "Email Address", type: "email", required: true, placeholder: "e.g. john@tld.com" },
             { name: "role", label: "Role", required: true, placeholder: "e.g. Junior Architect" },
+            {
+              name: "image_file",
+              label: "Profile Photo",
+              type: "file",
+              accept: "image/jpeg,image/png,image/webp,image/avif",
+              helpText: "Upload a JPG, PNG, WebP, or AVIF image up to 10MB.",
+            },
             { 
               name: "status", 
               label: "Status", 
@@ -82,6 +89,15 @@ export default async function TeamDirectoryPage() {
                         { name: "name", label: "Full Name", required: true, defaultValue: member.name },
                         { name: "email", label: "Email Address", type: "email", required: true, defaultValue: member.email },
                         { name: "role", label: "Role", required: true, defaultValue: member.role },
+                        {
+                          name: "image_file",
+                          label: "Profile Photo",
+                          type: "file",
+                          accept: "image/jpeg,image/png,image/webp,image/avif",
+                          helpText: member.image_url
+                            ? `Leave empty to keep the current photo. Current: ${member.image_url}`
+                            : "Leave empty if you do not want to add a photo yet.",
+                        },
                         { 
                           name: "status", 
                           label: "Status", 

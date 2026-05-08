@@ -18,6 +18,10 @@ export interface PortfolioRecord {
   category: string | null;
   description: string | null;
   image_url: string | null;
+  image_bucket: string;
+  image_path: string | null;
+  image_mime_type: string | null;
+  image_size_bytes: number | null;
   created_at: string;
 }
 
@@ -28,6 +32,10 @@ export interface TeamMemberRecord {
   email: string;
   status: MemberStatus;
   image_url: string | null;
+  image_bucket: string;
+  image_path: string | null;
+  image_mime_type: string | null;
+  image_size_bytes: number | null;
   created_at: string;
 }
 
@@ -37,6 +45,10 @@ export interface CollaboratorRecord {
   expertise_type: string;
   contact_email: string;
   joint_projects: number;
+  image_bucket: string;
+  image_path: string | null;
+  image_mime_type: string | null;
+  image_size_bytes: number | null;
   created_at: string;
 }
 
@@ -46,6 +58,10 @@ export interface AwardRecord {
   organization: string;
   award_year: number;
   related_project: string | null;
+  image_bucket: string;
+  image_path: string | null;
+  image_mime_type: string | null;
+  image_size_bytes: number | null;
   created_at: string;
 }
 

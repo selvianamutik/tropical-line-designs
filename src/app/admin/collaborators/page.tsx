@@ -26,6 +26,13 @@ export default async function CollaboratorsPage() {
             { name: "expertise_type", label: "Expertise / Type", required: true, placeholder: "e.g. Lighting Consultant" },
             { name: "contact_email", label: "Contact Email", type: "email", required: true, placeholder: "e.g. contact@lumina.co.id" },
             { name: "joint_projects", label: "Joint Projects", type: "number", defaultValue: 0, min: 0 },
+            {
+              name: "image_file",
+              label: "Collaborator Image",
+              type: "file",
+              accept: "image/jpeg,image/png,image/webp,image/avif",
+              helpText: "Upload a JPG, PNG, WebP, or AVIF image up to 10MB.",
+            },
           ]}
         />
       }
@@ -68,6 +75,15 @@ export default async function CollaboratorsPage() {
                         { name: "expertise_type", label: "Expertise / Type", required: true, defaultValue: collaborator.expertise_type },
                         { name: "contact_email", label: "Contact Email", type: "email", required: true, defaultValue: collaborator.contact_email },
                         { name: "joint_projects", label: "Joint Projects", type: "number", min: 0, defaultValue: collaborator.joint_projects },
+                        {
+                          name: "image_file",
+                          label: "Collaborator Image",
+                          type: "file",
+                          accept: "image/jpeg,image/png,image/webp,image/avif",
+                          helpText: collaborator.image_url
+                            ? `Leave empty to keep the current image. Current: ${collaborator.image_url}`
+                            : "Leave empty if you do not want to add an image yet.",
+                        },
                       ]}
                     />
                     <DeleteResourceForm id={collaborator.id} label={`Delete ${collaborator.company}`} action={deleteCollaborator} />
