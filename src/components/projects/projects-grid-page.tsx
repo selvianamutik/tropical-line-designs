@@ -1,11 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import type { ProjectRecord } from "@/data/projects";
+import type { PublicProjectRecord } from "@/lib/public/projects";
 import { ProjectOverlay } from "./project-overlay";
 
 type ProjectsGridPageProps = {
-  projects: ProjectRecord[];
+  projects: PublicProjectRecord[];
 };
 
 type ProjectHoverCardProps = {
@@ -44,7 +44,7 @@ function ProjectHoverCard({
   );
 }
 
-function ProjectGridCard({ project, onClick }: { project: ProjectRecord; onClick: () => void }) {
+function ProjectGridCard({ project, onClick }: { project: PublicProjectRecord; onClick: () => void }) {
   return (
     <article className="group relative h-[150px] overflow-hidden rounded-[3px] bg-[#ddd]">
       <div

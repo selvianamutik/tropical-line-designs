@@ -1,9 +1,11 @@
 import Link from "next/link";
 import { ProjectCard } from "@/components/projects/project-card";
 import { ProjectSectionHeader } from "@/components/projects/project-section-header";
-import { projects } from "@/data/projects";
+import { listPublicProjects } from "@/lib/public/projects";
 
-export function ProjectShowcaseSection() {
+export async function ProjectShowcaseSection() {
+  const projects = await listPublicProjects();
+
   return (
     <section
       id="projects"

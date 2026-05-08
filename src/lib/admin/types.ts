@@ -6,6 +6,7 @@ export type ProjectStatus =
   | "On Hold";
 
 export type MemberStatus = "Active" | "On Leave" | "Inactive";
+export type GalleryLayout = "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H" | "I" | "J";
 
 export interface PortfolioRecord {
   id: string;
@@ -16,7 +17,11 @@ export interface PortfolioRecord {
   commenced_at: string | null;
   client: string | null;
   category: string | null;
+  architect: string | null;
+  landscape_consultant: string | null;
+  project_size: string | null;
   description: string | null;
+  gallery_layout: GalleryLayout;
   image_url: string | null;
   image_bucket: string;
   image_path: string | null;
@@ -45,6 +50,7 @@ export interface CollaboratorRecord {
   expertise_type: string;
   contact_email: string;
   joint_projects: number;
+  image_url: string | null;
   image_bucket: string;
   image_path: string | null;
   image_mime_type: string | null;
@@ -58,6 +64,7 @@ export interface AwardRecord {
   organization: string;
   award_year: number;
   related_project: string | null;
+  image_url: string | null;
   image_bucket: string;
   image_path: string | null;
   image_mime_type: string | null;

@@ -13,6 +13,14 @@ type HeroContentProps = {
   layout?: "bottom-left" | "center" | "top-right" | "split";
 };
 
+function truncateFactValue(value: string, maxWords = 4) {
+  const words = value.trim().split(/\s+/).filter(Boolean);
+  if (words.length <= maxWords) {
+    return value.trim();
+  }
+  return `${words.slice(0, maxWords).join(" ")}`;
+}
+
 function useTypingText(text: string, speed = 26) {
   const [displayedText, setDisplayedText] = useState("");
 
@@ -67,12 +75,12 @@ export function HeroContent({ title, facts, layout = "bottom-left" }: HeroConten
             {typedTitle}
           </h1>
           <div className="mt-12 flex justify-center gap-12">
-             {facts.slice(0, 2).map(fact => (
-               <div key={fact.label}>
-                 <p className="text-[10px] uppercase tracking-widest text-white/50">{fact.label}</p>
-                 <p className="text-lg font-medium text-white">{fact.value}</p>
-               </div>
-             ))}
+              {facts.slice(0, 2).map(fact => (
+                <div key={fact.label}>
+                  <p className="text-[10px] uppercase tracking-widest text-white/50">{fact.label}</p>
+                  <p className="text-lg font-medium text-white">{truncateFactValue(fact.value)}</p>
+                </div>
+              ))}
           </div>
         </div>
       </div>
@@ -90,7 +98,7 @@ export function HeroContent({ title, facts, layout = "bottom-left" }: HeroConten
             {facts.map(fact => (
               <div key={fact.label} className="flex gap-4 items-baseline">
                 <span className="text-[10px] uppercase text-white/40">{fact.label}</span>
-                <span className="text-xl text-white">{fact.value}</span>
+                <span className="text-xl text-white">{truncateFactValue(fact.value)}</span>
               </div>
             ))}
           </div>
@@ -110,7 +118,7 @@ export function HeroContent({ title, facts, layout = "bottom-left" }: HeroConten
               {facts.map(fact => (
                 <div key={fact.label}>
                   <p className="text-[11px] uppercase tracking-[0.2em] text-white/60 mb-2">{fact.label}</p>
-                  <p className="text-2xl font-light text-white">{fact.value}</p>
+                  <p className="text-2xl font-light text-white">{truncateFactValue(fact.value)}</p>
                 </div>
               ))}
            </div>
@@ -136,7 +144,7 @@ export function HeroContent({ title, facts, layout = "bottom-left" }: HeroConten
                   {fact.label}
                 </p>
                 <p className="mt-2 text-base font-medium leading-7 text-white sm:text-[17px] lg:text-[18px]">
-                  {fact.value}
+                  {truncateFactValue(fact.value)}
                 </p>
               </div>
             ))}

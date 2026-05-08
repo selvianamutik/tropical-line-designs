@@ -1,5 +1,6 @@
 const PROJECT_STATUSES = ["Planning", "Design", "Construction", "Completed", "On Hold"] as const;
 const MEMBER_STATUSES = ["Active", "On Leave", "Inactive"] as const;
+const GALLERY_LAYOUTS = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"] as const;
 const MONTH_PATTERN = /^\d{4}-\d{2}$/;
 const SIMPLE_EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const HTTP_URL_PATTERN = /^https?:\/\/[^\s/$.?#].[^\s]*$/i;
@@ -141,4 +142,4 @@ export function slugifyOrThrow(value: string) {
   return slug;
 }
 
-export { MEMBER_STATUSES, PROJECT_STATUSES };
+export { GALLERY_LAYOUTS, MEMBER_STATUSES, PROJECT_STATUSES };

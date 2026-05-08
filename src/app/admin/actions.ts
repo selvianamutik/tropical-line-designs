@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { supabaseAdmin } from "@/lib/db";
 import {
+  GALLERY_LAYOUTS,
   MEMBER_STATUSES,
   PROJECT_STATUSES,
   optionalHttpUrl,
@@ -44,7 +45,11 @@ export async function upsertPortfolio(formData: FormData) {
     commenced_at: optionalMonthValue(formData, "commenced_at"),
     client: optionalText(formData, "client", { maxLength: 160 }),
     category: optionalText(formData, "category", { maxLength: 120 }),
+    architect: optionalText(formData, "architect", { maxLength: 160 }),
+    landscape_consultant: optionalText(formData, "landscape_consultant", { maxLength: 160 }),
+    project_size: optionalText(formData, "project_size", { maxLength: 80 }),
     description: optionalText(formData, "description", { maxLength: 4000, allowMultiline: true }),
+    gallery_layout: requiredEnumValue(formData, "gallery_layout", GALLERY_LAYOUTS),
     ...emptyImageColumns(),
   };
   let mutationPayload: typeof payload = payload;

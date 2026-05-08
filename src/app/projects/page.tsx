@@ -1,10 +1,12 @@
 import { SiteNav } from "@/components/global/site-nav";
 import { ProjectsSimpleFooter } from "@/components/global/site-nav";
 import { ProjectsGridPage } from "@/components/projects/projects-grid-page";
-import { projects } from "@/data/projects";
+import { listPublicProjects } from "@/lib/public/projects";
 
 
-export default function ProjectsPage() {
+export default async function ProjectsPage() {
+  const projects = await listPublicProjects();
+
   return (
     <main className="min-h-screen bg-[#f8f3ea] text-slate-950">
       <SiteNav

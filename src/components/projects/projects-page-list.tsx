@@ -1,8 +1,8 @@
 import Link from "next/link";
-import type { ProjectRecord } from "@/data/projects";
+import type { PublicProjectRecord } from "@/lib/public/projects";
 
 type ProjectsPageListProps = {
-  projects: ProjectRecord[];
+  projects: PublicProjectRecord[];
 };
 
 export function ProjectsPageList({ projects }: ProjectsPageListProps) {

@@ -3,11 +3,11 @@
 import Image from "next/image";
 import { X, ArrowLeft, ArrowRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ProjectRecord, GalleryLayout } from "@/data/projects";
+import { PublicProjectRecord, GalleryLayout } from "@/lib/public/projects";
 import { cn } from "@/lib/utils";
 
 interface ProjectOverlayProps {
-  project: ProjectRecord;
+  project: PublicProjectRecord;
   isOpen: boolean;
   onClose: () => void;
   onNext?: () => void;

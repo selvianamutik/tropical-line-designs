@@ -15,6 +15,14 @@ type StoredImage = {
   image_size_bytes: number;
 };
 
+type EmptyStoredImage = {
+  image_bucket: string;
+  image_path: string | null;
+  image_url: string | null;
+  image_mime_type: string | null;
+  image_size_bytes: number | null;
+};
+
 function sanitizeSegment(value: string) {
   return value
     .toLowerCase()
@@ -103,7 +111,7 @@ export async function removeEntityImage(imagePath: string | null | undefined) {
   }
 }
 
-export function emptyImageColumns() {
+export function emptyImageColumns(): EmptyStoredImage {
   return {
     image_bucket: MEDIA_BUCKET,
     image_path: null,
