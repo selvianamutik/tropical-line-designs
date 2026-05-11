@@ -45,8 +45,16 @@ type GalleryItemRow = {
   sort_order: number;
   media_assets: {
     public_url: string;
+  } | {
+    public_url: string;
   }[] | null;
 };
+
+function normalizeGalleryAsset(
+  asset: GalleryItemRow["media_assets"],
+) {
+  return Array.isArray(asset) ? (asset[0] ?? null) : asset;
+}
 
 function formatProjectYear(commencedAt: string | null) {
   if (!commencedAt) {
@@ -171,7 +179,7 @@ export const listPublicProjects = cache(async (): Promise<PublicProjectRecord[]>
 
     if (galleryItems) {
       galleryByPortfolioId = (galleryItems as GalleryItemRow[]).reduce((map, item) => {
-        const publicUrl = item.media_assets?.[0]?.public_url;
+        const publicUrl = normalizeGalleryAsset(item.media_assets)?.public_url;
         if (!publicUrl) {
           return map;
         }

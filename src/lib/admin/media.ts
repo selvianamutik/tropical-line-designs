@@ -1,16 +1,16 @@
 import { randomUUID } from "crypto";
-import { supabaseAdmin } from "@/lib/db";
+import sharp from "sharp";
+import { createClient } from "@/lib/supabase/server";
 
 const MEDIA_BUCKET = "site-media";
 const MAX_IMAGE_SIZE_BYTES = 10 * 1024 * 1024;
 const ALLOWED_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp", "image/avif"]);
 
-type MediaOwner = "portfolios" | "team_members" | "collaborators" | "awards";
+type MediaOwner = "portfolios" | "team_members" | "collaborators" | "awards" | "portfolio_gallery";
 
 type StoredImage = {
   image_bucket: string;
   image_path: string;
-  image_url: string;
   image_mime_type: string;
   image_size_bytes: number;
 };
@@ -18,7 +18,6 @@ type StoredImage = {
 type EmptyStoredImage = {
   image_bucket: string;
   image_path: string | null;
-  image_url: string | null;
   image_mime_type: string | null;
   image_size_bytes: number | null;
 };
@@ -28,21 +27,6 @@ function sanitizeSegment(value: string) {
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
-}
-
-function extensionForImage(file: File) {
-  switch (file.type) {
-    case "image/jpeg":
-      return "jpg";
-    case "image/png":
-      return "png";
-    case "image/webp":
-      return "webp";
-    case "image/avif":
-      return "avif";
-    default:
-      throw new Error("Unsupported image format.");
-  }
 }
 
 export function getOptionalImageFile(formData: FormData, key: string) {
@@ -62,6 +46,21 @@ export function getOptionalImageFile(formData: FormData, key: string) {
   return value;
 }
 
+async function convertImageToWebp(file: File) {
+  const inputBuffer = Buffer.from(await file.arrayBuffer());
+  const outputBuffer = await sharp(inputBuffer, { animated: false })
+    .rotate()
+    .webp({ quality: 82, effort: 6 })
+    .toBuffer();
+
+  return {
+    bytes: new Uint8Array(outputBuffer),
+    mimeType: "image/webp",
+    sizeBytes: outputBuffer.byteLength,
+    extension: "webp",
+  };
+}
+
 export async function uploadEntityImage({
   owner,
   recordId,
@@ -73,14 +72,15 @@ export async function uploadEntityImage({
   slugSource: string;
   file: File;
 }): Promise<StoredImage> {
+  const supabase = await createClient();
   const slug = sanitizeSegment(slugSource) || owner;
-  const objectPath = `${owner}/${slug}/${recordId}-${randomUUID()}.${extensionForImage(file)}`;
-  const bytes = new Uint8Array(await file.arrayBuffer());
+  const convertedImage = await convertImageToWebp(file);
+  const objectPath = `${owner}/${slug}/${recordId}-${randomUUID()}.${convertedImage.extension}`;
 
-  const { error: uploadError } = await supabaseAdmin.storage
+  const { error: uploadError } = await supabase.storage
     .from(MEDIA_BUCKET)
-    .upload(objectPath, bytes, {
-      contentType: file.type,
+    .upload(objectPath, convertedImage.bytes, {
+      contentType: convertedImage.mimeType,
       cacheControl: "3600",
       upsert: true,
     });
@@ -89,14 +89,11 @@ export async function uploadEntityImage({
     throw uploadError;
   }
 
-  const { data } = supabaseAdmin.storage.from(MEDIA_BUCKET).getPublicUrl(objectPath);
-
   return {
     image_bucket: MEDIA_BUCKET,
     image_path: objectPath,
-    image_url: data.publicUrl,
-    image_mime_type: file.type,
-    image_size_bytes: file.size,
+    image_mime_type: convertedImage.mimeType,
+    image_size_bytes: convertedImage.sizeBytes,
   };
 }
 
@@ -105,7 +102,8 @@ export async function removeEntityImage(imagePath: string | null | undefined) {
     return;
   }
 
-  const { error } = await supabaseAdmin.storage.from(MEDIA_BUCKET).remove([imagePath]);
+  const supabase = await createClient();
+  const { error } = await supabase.storage.from(MEDIA_BUCKET).remove([imagePath]);
   if (error) {
     throw error;
   }
@@ -115,8 +113,62 @@ export function emptyImageColumns(): EmptyStoredImage {
   return {
     image_bucket: MEDIA_BUCKET,
     image_path: null,
-    image_url: null,
     image_mime_type: null,
     image_size_bytes: null,
+  };
+}
+
+export async function uploadPortfolioGalleryAsset({
+  portfolioId,
+  slugSource,
+  file,
+}: {
+  portfolioId: string;
+  slugSource: string;
+  file: File;
+}) {
+  const supabase = await createClient();
+  const slug = sanitizeSegment(slugSource) || "portfolio-gallery";
+  const convertedImage = await convertImageToWebp(file);
+  const objectPath = `portfolio-gallery/${slug}/${portfolioId}-${randomUUID()}.${convertedImage.extension}`;
+
+  const { error: uploadError } = await supabase.storage
+    .from(MEDIA_BUCKET)
+    .upload(objectPath, convertedImage.bytes, {
+      contentType: convertedImage.mimeType,
+      cacheControl: "3600",
+      upsert: false,
+    });
+
+  if (uploadError) {
+    throw uploadError;
+  }
+
+  const { data } = supabase.storage.from(MEDIA_BUCKET).getPublicUrl(objectPath);
+
+  const { data: mediaAsset, error: mediaError } = await supabase
+    .from("media_assets")
+    .insert({
+      bucket: MEDIA_BUCKET,
+      object_path: objectPath,
+      public_url: data.publicUrl,
+      mime_type: convertedImage.mimeType,
+      size_bytes: convertedImage.sizeBytes,
+      alt_text: `${slugSource} gallery image`,
+    })
+    .select("id, public_url, object_path")
+    .single();
+
+  if (mediaError) {
+    await removeEntityImage(objectPath);
+    throw mediaError;
+  }
+
+  return {
+    mediaAssetId: mediaAsset.id as string,
+    publicUrl: mediaAsset.public_url as string,
+    objectPath: mediaAsset.object_path as string,
+    mimeType: convertedImage.mimeType,
+    sizeBytes: convertedImage.sizeBytes,
   };
 }

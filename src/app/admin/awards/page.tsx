@@ -32,7 +32,7 @@ export default async function AwardsPage() {
               label: "Award Image",
               type: "file",
               accept: "image/jpeg,image/png,image/webp,image/avif",
-              helpText: "Upload a JPG, PNG, WebP, or AVIF image up to 10MB.",
+              helpText: "Upload a JPG, PNG, WebP, or AVIF image up to 10MB. File will be converted to WebP automatically.",
             },
           ]}
         />
@@ -84,9 +84,9 @@ export default async function AwardsPage() {
                           label: "Award Image",
                           type: "file",
                           accept: "image/jpeg,image/png,image/webp,image/avif",
-                          helpText: award.image_url
-                            ? `Leave empty to keep the current image. Current: ${award.image_url}`
-                            : "Leave empty if you do not want to add an image yet.",
+                          helpText: award.image_public_url
+                            ? `Leave empty to keep the current image. New uploads will be converted to WebP automatically. Current: ${award.image_public_url}`
+                            : "Leave empty if you do not want to add an image yet. New uploads will be converted to WebP automatically.",
                         },
                       ]}
                     />

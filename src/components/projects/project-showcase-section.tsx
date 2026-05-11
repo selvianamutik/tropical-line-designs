@@ -17,7 +17,7 @@ export async function ProjectShowcaseSection() {
           title="Project Page"
           description="A modular project showcase built to carry the same editorial landscape language as the landing hero. Each block is separated into reusable components so future project pages can keep the same rhythm, navigation, and footer structure."
         />
-
+        
         <div className="grid gap-8">
           {projects.slice(0, 3).map((project) => (
             <ProjectCard
@@ -31,7 +31,7 @@ export async function ProjectShowcaseSection() {
           ))}
         </div>
 
-        <div className="flex justify-end">
+        <div className="flex justify-end ">
           <Link
             href="/projects"
             className="inline-flex items-center border-b border-black pb-1 text-[11px] uppercase tracking-[0.18em] text-slate-900"

@@ -1,15 +1,17 @@
 import { AdminPageShell } from "@/components/admin/admin-page-shell";
-import { DeleteResourceForm } from "@/components/admin/delete-resource-form";
 import { EmptyState } from "@/components/admin/empty-state";
+import { AdminProjectsTable } from "@/components/admin/admin-projects-table";
 import { ResourceFormDialog } from "@/components/admin/resource-form-dialog";
-import { TableCell, TableHead, TableHeader, TableRow } from "@/components/admin/ui/Table";
-import { PaginatedTable } from "@/components/admin/paginated-table";
-import { deletePortfolio, upsertPortfolio } from "@/app/admin/actions";
-import { formatMonthYear, toMonthInputValue } from "@/lib/admin/format";
-import { listPortfolios } from "@/lib/admin/repository";
+import { upsertPortfolio } from "@/app/admin/actions";
+import { listPortfolioGalleryItems, listPortfolios } from "@/lib/admin/repository";
+import { listPublicProjects } from "@/lib/public/projects";
 
 export default async function ProjectManagerPage() {
-  const projects = await listPortfolios();
+  const [projects, overlayProjects, portfolioGalleryItems] = await Promise.all([
+    listPortfolios(),
+    listPublicProjects(),
+    listPortfolioGalleryItems(),
+  ]);
 
   return (
     <AdminPageShell
@@ -49,6 +51,7 @@ export default async function ProjectManagerPage() {
               name: "gallery_layout",
               label: "Gallery Layout",
               type: "select",
+              previewKind: "gallery-layout",
               required: true,
               defaultValue: "D",
               options: [
@@ -69,7 +72,7 @@ export default async function ProjectManagerPage() {
               label: "Cover Image",
               type: "file",
               accept: "image/jpeg,image/png,image/webp,image/avif",
-              helpText: "Upload a JPG, PNG, WebP, or AVIF image up to 10MB.",
+              helpText: "Upload a JPG, PNG, WebP, or AVIF image up to 10MB. File will be converted to WebP automatically.",
             },
             { name: "description", label: "Description", type: "textarea", placeholder: "Project summary..." },
           ]}
@@ -82,97 +85,7 @@ export default async function ProjectManagerPage() {
           description="Run the SQL schema, then start adding portfolio entries from this admin page."
         />
       ) : (
-        <PaginatedTable
-          headers={
-            <TableHeader>
-              <TableRow>
-                <TableHead>Project Title</TableHead>
-                <TableHead>Location</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Commenced</TableHead>
-                <TableHead className="w-[120px] text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-          }
-        >
-            {projects.map((project) => (
-              <TableRow key={project.id}>
-                <TableCell className="font-semibold">{project.title}</TableCell>
-                <TableCell className="text-[#6b6762]">{project.location}</TableCell>
-                <TableCell>
-                  <span className="px-2 py-1 bg-[#f4efe6] text-[9px] font-bold tracking-[0.1em] text-[#8a867f] uppercase rounded-sm">
-                    {project.status}
-                  </span>
-                </TableCell>
-                <TableCell className="text-[#6b6762]">{formatMonthYear(project.commenced_at)}</TableCell>
-                <TableCell className="text-right">
-                  <div className="flex justify-end gap-2">
-                    <ResourceFormDialog
-                      title="Edit Project"
-                      description="Update the portfolio entry."
-                      submitLabel="Save Changes"
-                      action={upsertPortfolio}
-                      initialId={project.id}
-                      fields={[
-                        { name: "title", label: "Project Title", required: true, defaultValue: project.title },
-                        { name: "location", label: "Location", required: true, defaultValue: project.location },
-                        { 
-                          name: "status", 
-                          label: "Status", 
-                          type: "select", 
-                          required: true, 
-                          defaultValue: project.status,
-                          options: [
-                            { label: "Planning", value: "Planning" },
-                            { label: "Design", value: "Design" },
-                            { label: "Construction", value: "Construction" },
-                            { label: "Completed", value: "Completed" },
-                            { label: "On Hold", value: "On Hold" },
-                          ]
-                        },
-                        { name: "commenced_at", label: "Commenced Date", type: "month", defaultValue: toMonthInputValue(project.commenced_at) },
-                        { name: "client", label: "Client", defaultValue: project.client },
-                        { name: "category", label: "Category", defaultValue: project.category },
-                        { name: "architect", label: "Architect", defaultValue: project.architect },
-                        { name: "landscape_consultant", label: "Landscape Consultant", defaultValue: project.landscape_consultant },
-                        { name: "project_size", label: "Project Size", defaultValue: project.project_size },
-                        {
-                          name: "gallery_layout",
-                          label: "Gallery Layout",
-                          type: "select",
-                          required: true,
-                          defaultValue: project.gallery_layout,
-                          options: [
-                            { label: "Layout A", value: "A" },
-                            { label: "Layout B", value: "B" },
-                            { label: "Layout C", value: "C" },
-                            { label: "Layout D", value: "D" },
-                            { label: "Layout E", value: "E" },
-                            { label: "Layout F", value: "F" },
-                            { label: "Layout G", value: "G" },
-                            { label: "Layout H", value: "H" },
-                            { label: "Layout I", value: "I" },
-                            { label: "Layout J", value: "J" },
-                          ],
-                        },
-                        {
-                          name: "image_file",
-                          label: "Cover Image",
-                          type: "file",
-                          accept: "image/jpeg,image/png,image/webp,image/avif",
-                          helpText: project.image_url
-                            ? `Leave empty to keep the current image. Current: ${project.image_url}`
-                            : "Leave empty if you do not want to add an image yet.",
-                        },
-                        { name: "description", label: "Description", type: "textarea", defaultValue: project.description },
-                      ]}
-                    />
-                    <DeleteResourceForm id={project.id} label={`Delete ${project.title}`} action={deletePortfolio} />
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))}
-        </PaginatedTable>
+        <AdminProjectsTable projects={projects} overlayProjects={overlayProjects} portfolioGalleryItems={portfolioGalleryItems} />
       )}
     </AdminPageShell>
   );

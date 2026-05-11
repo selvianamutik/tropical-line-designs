@@ -1,11 +1,15 @@
-import { Search, User } from "lucide-react";
+import { Search } from "lucide-react";
 import { AdminSidebar } from "@/components/admin/admin-sidebar";
+import { AdminUserMenu } from "@/components/admin/admin-user-menu";
+import { requireAdmin } from "@/lib/admin/auth";
 
-export default function AdminLayout({
+export default async function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const { user } = await requireAdmin();
+
   return (
     <div className="min-h-screen bg-[#FDFBF7] flex font-sans text-[#383532]">
       <AdminSidebar />
@@ -26,9 +30,7 @@ export default function AdminLayout({
                 className="pl-10 pr-4 py-2 w-64 bg-transparent border border-[#d9d4ca] rounded text-sm outline-none focus:border-[#d97706] transition-colors placeholder:text-[#a5a098]"
               />
             </div>
-            <button className="w-9 h-9 flex items-center justify-center rounded-full border border-[#d9d4ca] text-[#383532] hover:bg-[#383532] hover:text-[#FDFBF7] transition-all">
-              <User className="w-4 h-4" />
-            </button>
+            <AdminUserMenu email={user.email ?? "admin"} />
           </div>
         </header>
 

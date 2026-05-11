@@ -22,12 +22,23 @@ export interface PortfolioRecord {
   project_size: string | null;
   description: string | null;
   gallery_layout: GalleryLayout;
-  image_url: string | null;
   image_bucket: string;
   image_path: string | null;
   image_mime_type: string | null;
   image_size_bytes: number | null;
+  image_public_url?: string | null;
   created_at: string;
+}
+
+export interface PortfolioGalleryItemRecord {
+  id: string;
+  portfolio_id: string;
+  media_asset_id: string;
+  sort_order: number;
+  caption: string | null;
+  created_at: string;
+  media_asset_url: string;
+  media_asset_path: string;
 }
 
 export interface TeamMemberRecord {
@@ -36,11 +47,11 @@ export interface TeamMemberRecord {
   role: string;
   email: string;
   status: MemberStatus;
-  image_url: string | null;
   image_bucket: string;
   image_path: string | null;
   image_mime_type: string | null;
   image_size_bytes: number | null;
+  image_public_url?: string | null;
   created_at: string;
 }
 
@@ -50,11 +61,11 @@ export interface CollaboratorRecord {
   expertise_type: string;
   contact_email: string;
   joint_projects: number;
-  image_url: string | null;
   image_bucket: string;
   image_path: string | null;
   image_mime_type: string | null;
   image_size_bytes: number | null;
+  image_public_url?: string | null;
   created_at: string;
 }
 
@@ -64,11 +75,11 @@ export interface AwardRecord {
   organization: string;
   award_year: number;
   related_project: string | null;
-  image_url: string | null;
   image_bucket: string;
   image_path: string | null;
   image_mime_type: string | null;
   image_size_bytes: number | null;
+  image_public_url?: string | null;
   created_at: string;
 }
 

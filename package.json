@@ -10,6 +10,7 @@
     "check:env": "python execution/validate_env.py"
   },
   "dependencies": {
+    "@supabase/ssr": "^0.10.3",
     "@supabase/supabase-js": "^2.105.3",
     "clsx": "^2.1.1",
     "framer-motion": "^12.38.0",
@@ -19,6 +20,7 @@
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-leaflet": "^5.0.0",
+    "sharp": "^0.34.5",
     "tailwind-merge": "^3.3.0"
   },
   "devDependencies": {

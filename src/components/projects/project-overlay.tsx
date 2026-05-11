@@ -12,6 +12,47 @@ interface ProjectOverlayProps {
   onClose: () => void;
   onNext?: () => void;
   onPrev?: () => void;
+  showImageOrderLabels?: boolean;
+}
+
+function isSupabaseStorageUrl(value: string) {
+  return value.includes(".supabase.co/storage/v1/object/public/");
+}
+
+function ImageOrderBadge({ index }: { index: number }) {
+  return (
+    <div className="absolute left-3 top-3 z-20 flex h-8 min-w-8 items-center justify-center rounded-full bg-[#d97706] px-2 text-[11px] font-bold text-white shadow-lg ring-2 ring-white/90">
+      {index + 1}
+    </div>
+  );
+}
+
+function ProjectImage({
+  src,
+  alt,
+  priority = false,
+  orderIndex,
+  showOrderLabel = false,
+}: {
+  src: string;
+  alt: string;
+  priority?: boolean;
+  orderIndex?: number;
+  showOrderLabel?: boolean;
+}) {
+  return (
+    <>
+      {showOrderLabel && typeof orderIndex === "number" ? <ImageOrderBadge index={orderIndex} /> : null}
+      <Image
+        src={src}
+        alt={alt}
+        fill
+        className="object-cover"
+        priority={priority}
+        unoptimized={isSupabaseStorageUrl(src)}
+      />
+    </>
+  );
 }
 
 export function ProjectOverlay({
@@ -20,6 +61,7 @@ export function ProjectOverlay({
   onClose,
   onNext,
   onPrev,
+  showImageOrderLabels = false,
 }: ProjectOverlayProps) {
   if (!isOpen) return null;
 
@@ -52,13 +94,7 @@ export function ProjectOverlay({
             layoutId={`image-${project.slug}`}
             className="relative aspect-[4/5] w-full bg-[#f8f3ea]"
           >
-            <Image 
-              src={project.image} 
-              alt={project.title} 
-              fill 
-              className="object-cover"
-              priority
-            />
+            <ProjectImage src={project.image} alt={project.title} priority orderIndex={0} showOrderLabel={showImageOrderLabels} />
             <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
             <div className="absolute bottom-8 left-6 right-6 text-white">
               <h1 className="text-3xl font-bold uppercase tracking-tight leading-none mb-2">
@@ -112,7 +148,7 @@ export function ProjectOverlay({
           <div className="flex flex-col gap-4 px-4 bg-white">
             {images.map((img, i) => (
               <div key={i} className="relative aspect-video w-full rounded-sm overflow-hidden bg-[#f8f3ea]">
-                <Image src={img} alt={`${project.title} ${i}`} fill className="object-cover" />
+                <ProjectImage src={img} alt={`${project.title} ${i}`} orderIndex={i} showOrderLabel={showImageOrderLabels} />
               </div>
             ))}
           </div>
@@ -190,7 +226,7 @@ export function ProjectOverlay({
             layoutId={`image-${project.slug}`}
             className={`"w-full md:w-[65%] h-full min-h-screen bg-[#FDFBF7] order-1 md:order-2 flex items-center justify-center" ${layout === "H" ? "md:justify-end" :"md:justify-start"}`}
           >
-             <ProjectGalleryTemplate layout={layout} images={images} />
+             <ProjectGalleryTemplate layout={layout} images={images} showImageOrderLabels={showImageOrderLabels} />
           </motion.div>
         </div>
 
@@ -216,7 +252,15 @@ export function ProjectOverlay({
   );
 }
 
-function ProjectGalleryTemplate({ layout, images }: { layout: GalleryLayout; images: string[] }) {
+function ProjectGalleryTemplate({
+  layout,
+  images,
+  showImageOrderLabels,
+}: {
+  layout: GalleryLayout;
+  images: string[];
+  showImageOrderLabels: boolean;
+}) {
   // Pad images array to ensure we have enough for layouts
   const safeImages = [...images];
   while (safeImages.length < 4) safeImages.push(images[0]);
@@ -226,17 +270,17 @@ function ProjectGalleryTemplate({ layout, images }: { layout: GalleryLayout; ima
     return (
       <div className="grid grid-cols-2 grid-rows-2 gap-4 h-screen w-[90%] aspect-square md:aspect-auto">
         <div className="relative col-span-2 row-span-1">
-          <Image src={safeImages[0]} alt="Project" fill className="object-cover" />
+          <ProjectImage src={safeImages[0]} alt="Project" orderIndex={0} showOrderLabel={showImageOrderLabels} />
         </div>
         <div className="relative col-span-1 row-span-1">
-          <Image src={safeImages[1]} alt="Project" fill className="object-cover" />
+          <ProjectImage src={safeImages[1]} alt="Project" orderIndex={1} showOrderLabel={showImageOrderLabels} />
         </div>
         <div className="flex flex-col gap-4">
            <div className="relative flex-1">
-             <Image src={safeImages[2]} alt="Project" fill className="object-cover" />
+             <ProjectImage src={safeImages[2]} alt="Project" orderIndex={2} showOrderLabel={showImageOrderLabels} />
            </div>
            <div className="relative flex-1">
-             <Image src={safeImages[3]} alt="Project" fill className="object-cover" />
+             <ProjectImage src={safeImages[3]} alt="Project" orderIndex={3} showOrderLabel={showImageOrderLabels} />
            </div>
         </div>
       </div>
@@ -249,20 +293,20 @@ function ProjectGalleryTemplate({ layout, images }: { layout: GalleryLayout; ima
       <div className="flex flex-col gap-4 h-screen w-[90%] justify-between relative aspect-square md:aspect-auto">
         <div className="grid grid-cols-3 gap-4 h-[40%] absolute w-[145%] right-0">
           <div className="relative col-span-2">
-            <Image src={safeImages[0]} alt="Project" fill className="object-cover" />
+            <ProjectImage src={safeImages[0]} alt="Project" orderIndex={0} showOrderLabel={showImageOrderLabels} />
           </div>
           <div className="relative">
-            <Image src={safeImages[1]} alt="Project" fill className="object-cover" />
+            <ProjectImage src={safeImages[1]} alt="Project" orderIndex={1} showOrderLabel={showImageOrderLabels} />
           </div>
         </div>
         <div className=""></div>
         <div className="grid grid-cols-3 grid-rows-3 relative gap-4 h-[63%]">
           <div className="relative col-start-2 col-span-2 row-span-2 border-t-[12px] border-l-[12px] border-white">
-            <Image src={safeImages[3]} alt="Project" fill className="object-cover" />
+            <ProjectImage src={safeImages[3]} alt="Project" orderIndex={3} showOrderLabel={showImageOrderLabels} />
           </div>
           <div className="relative row-start-3">
             <div className="absolute bottom-0 w-[500px] h-[300px] border-r-[12px] border-t-[12px] border-white">
-              <Image src={safeImages[2]} alt="Project" fill className="object-cover" />
+              <ProjectImage src={safeImages[2]} alt="Project" orderIndex={2} showOrderLabel={showImageOrderLabels} />
             </div>
           </div>
         </div>
@@ -275,14 +319,14 @@ function ProjectGalleryTemplate({ layout, images }: { layout: GalleryLayout; ima
     return (
       <div className="grid grid-cols-2 grid-rows-3 gap-4 h-screen w-[90%] aspect-square md:aspect-auto">
         <div className="relative col-span-2 row-span-2">
-          <Image src={safeImages[0]} alt="Project" fill className="object-cover" />
+          <ProjectImage src={safeImages[0]} alt="Project" orderIndex={0} showOrderLabel={showImageOrderLabels} />
         </div>
         <div className="relative col-span-1 row-span-1">
-          <Image src={safeImages[1]} alt="Project" fill className="object-cover" />
+          <ProjectImage src={safeImages[1]} alt="Project" orderIndex={1} showOrderLabel={showImageOrderLabels} />
         </div>
         <div className="flex flex-col gap-4">
            <div className="relative flex-1"> 
-             <Image src={safeImages[2]} alt="Project" fill className="object-cover" />
+             <ProjectImage src={safeImages[2]} alt="Project" orderIndex={2} showOrderLabel={showImageOrderLabels} />
            </div>
         </div>
       </div>
@@ -294,11 +338,11 @@ function ProjectGalleryTemplate({ layout, images }: { layout: GalleryLayout; ima
     return (
       <div className="relative h-screen w-[90%]">
          <div className="relative w-full h-full shadow-2xl">
-            <Image src={safeImages[0]} alt="Project" fill className="object-cover" />
+            <ProjectImage src={safeImages[0]} alt="Project" orderIndex={0} showOrderLabel={showImageOrderLabels} />
          </div>
          {/* Subtle floating detail (optional layout variation)
          <div className="absolute top-1/2 right-0 -translate-y-1/2 w-1/3 h-1/2 hidden md:block border-8 border-white shadow-xl">
-         <Image src={safeImages[1]} alt="Project" fill className="object-cover" />
+         <ProjectImage src={safeImages[1]} alt="Project" />
          </div> */}
       </div>
     );
@@ -309,17 +353,17 @@ function ProjectGalleryTemplate({ layout, images }: { layout: GalleryLayout; ima
     return (
       <div className="grid grid-cols-2 grid-rows-2 relative gap-4 h-screen w-[90%] aspect-square md:aspect-auto">
         <div className="relative col-span-2 row-span-1">
-          <Image src={safeImages[0]} alt="Project" fill className="object-cover" />
+          <ProjectImage src={safeImages[0]} alt="Project" orderIndex={0} showOrderLabel={showImageOrderLabels} />
         </div>
         <div className="relative col-span-1 row-span-1">
-          <Image src={safeImages[1]} alt="Project" fill className="object-cover" />
+          <ProjectImage src={safeImages[1]} alt="Project" orderIndex={1} showOrderLabel={showImageOrderLabels} />
         </div>
         <div className="flex flex-col gap-4">
            <div className="relative h-[290px] mt-auto">
-             <Image src={safeImages[2]} alt="Project" fill className="object-cover" />
+             <ProjectImage src={safeImages[2]} alt="Project" orderIndex={2} showOrderLabel={showImageOrderLabels} />
            </div>
           <div className="absolute top-[55%] right-0 -translate-y-1/2 w-[60%] h-[40%] hidden md:block border-l-[12px] border-y-[12px] border-white">
-            <Image src={safeImages[3]} alt="Project" fill className="object-cover" />
+            <ProjectImage src={safeImages[3]} alt="Project" orderIndex={3} showOrderLabel={showImageOrderLabels} />
           </div>
         </div>
       </div>
@@ -331,15 +375,15 @@ function ProjectGalleryTemplate({ layout, images }: { layout: GalleryLayout; ima
     return (
       <div className="grid grid-cols-2 grid-rows-2 relative h-screen gap-4 w-[90%] aspect-square md:aspect-auto">
         <div className="relative col-span-2 row-span-1">
-          <Image src={safeImages[0]} alt="Project" fill className="object-cover" />
+          <ProjectImage src={safeImages[0]} alt="Project" orderIndex={0} showOrderLabel={showImageOrderLabels} />
         </div>
         <div className="absolute flex flex-col gap-4 w-full h-full z-10">
           <div className="absolute top-1/2 right-0 -translate-y-1/2 w-[60%] h-[40%] hidden md:block border-l-[12px] border-y-[12px] border-white">
-            <Image src={safeImages[2]} alt="Project" fill className="object-cover" />
+            <ProjectImage src={safeImages[2]} alt="Project" orderIndex={2} showOrderLabel={showImageOrderLabels} />
           </div>
         </div>
         <div className="relative col-span-2 row-span-1">
-          <Image src={safeImages[1]} alt="Project" fill className="object-cover" />
+          <ProjectImage src={safeImages[1]} alt="Project" orderIndex={1} showOrderLabel={showImageOrderLabels} />
         </div>
       </div>
     );
@@ -350,18 +394,18 @@ function ProjectGalleryTemplate({ layout, images }: { layout: GalleryLayout; ima
     return (
       <div className="grid grid-cols-2 grid-rows-3 gap-4 h-screen w-[90%] aspect-square md:aspect-auto">
         <div className="relative col-span-2 row-span-1">
-          <Image src={safeImages[0]} alt="Project" fill className="object-cover" />
+          <ProjectImage src={safeImages[0]} alt="Project" orderIndex={0} showOrderLabel={showImageOrderLabels} />
         </div>
         <div className="relative col-span-1 row-span-1">
-          <Image src={safeImages[1]} alt="Project" fill className="object-cover" />
+          <ProjectImage src={safeImages[1]} alt="Project" orderIndex={1} showOrderLabel={showImageOrderLabels} />
         </div>
         <div className="flex flex-col gap-4">
            <div className="relative flex-1"> 
-             <Image src={safeImages[2]} alt="Project" fill className="object-cover" />
+             <ProjectImage src={safeImages[2]} alt="Project" orderIndex={2} showOrderLabel={showImageOrderLabels} />
            </div>
         </div>
         <div className="relative col-span-2 row-span-1">
-          <Image src={safeImages[3]} alt="Project" fill className="object-cover" />
+          <ProjectImage src={safeImages[3]} alt="Project" orderIndex={3} showOrderLabel={showImageOrderLabels} />
         </div>
       </div>
     );
@@ -372,13 +416,13 @@ function ProjectGalleryTemplate({ layout, images }: { layout: GalleryLayout; ima
     return (
       <div className="grid grid-cols-2 grid-rows-3 gap-4 h-screen w-[90%] aspect-square md:aspect-auto float-end">
         <div className="relative col-span-2 row-span-1">
-          <Image src={safeImages[0]} alt="Project" fill className="object-cover" />
+          <ProjectImage src={safeImages[0]} alt="Project" orderIndex={0} showOrderLabel={showImageOrderLabels} />
         </div>
         <div className="relative col-span-2 row-span-1">
-          <Image src={safeImages[1]} alt="Project" fill className="object-cover" />
+          <ProjectImage src={safeImages[1]} alt="Project" orderIndex={1} showOrderLabel={showImageOrderLabels} />
         </div>
         <div className="relative col-span-2 row-span-1">
-          <Image src={safeImages[2]} alt="Project" fill className="object-cover" />
+          <ProjectImage src={safeImages[2]} alt="Project" orderIndex={2} showOrderLabel={showImageOrderLabels} />
         </div>
       </div>
     );
@@ -389,15 +433,15 @@ function ProjectGalleryTemplate({ layout, images }: { layout: GalleryLayout; ima
     return (
       <div className="grid grid-cols-3 grid-rows-3 gap-4 h-screen w-[90%] aspect-square md:aspect-auto">
         <div className="relative col-span-2 row-span-1">
-          <Image src={safeImages[0]} alt="Project" fill className="object-cover" />
+          <ProjectImage src={safeImages[0]} alt="Project" orderIndex={0} showOrderLabel={showImageOrderLabels} />
         </div>
         <div className="flex flex-col gap-4">
            <div className="relative flex-1"> 
-             <Image src={safeImages[1]} alt="Project" fill className="object-cover" />
+             <ProjectImage src={safeImages[1]} alt="Project" orderIndex={1} showOrderLabel={showImageOrderLabels} />
            </div>
         </div>
         <div className="relative col-span-3 row-span-2">
-          <Image src={safeImages[2]} alt="Project" fill className="object-cover" />
+          <ProjectImage src={safeImages[2]} alt="Project" orderIndex={2} showOrderLabel={showImageOrderLabels} />
         </div>
       </div>
     );
@@ -407,15 +451,15 @@ function ProjectGalleryTemplate({ layout, images }: { layout: GalleryLayout; ima
     return (
       <div className="grid grid-cols-3 grid-rows-3 gap-4 h-screen w-[90%] aspect-square md:aspect-auto">
         <div className="relative col-span-1 row-span-1">
-          <Image src={safeImages[0]} alt="Project" fill className="object-cover" />
+          <ProjectImage src={safeImages[0]} alt="Project" orderIndex={0} showOrderLabel={showImageOrderLabels} />
         </div>
         <div className="flex flex-col gap-4 col-span-2">
            <div className="relative flex-1"> 
-             <Image src={safeImages[1]} alt="Project" fill className="object-cover" />
+             <ProjectImage src={safeImages[1]} alt="Project" orderIndex={1} showOrderLabel={showImageOrderLabels} />
            </div>
         </div>
         <div className="relative col-span-3 row-span-2">
-          <Image src={safeImages[2]} alt="Project" fill className="object-cover" />
+          <ProjectImage src={safeImages[2]} alt="Project" orderIndex={2} showOrderLabel={showImageOrderLabels} />
         </div>
       </div>
     );

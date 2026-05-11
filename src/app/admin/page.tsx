@@ -64,7 +64,7 @@ export default async function AdminDashboard() {
               <div className="flex items-center gap-6">
                 <div className="relative w-28 h-28 object-cover grayscale overflow-hidden">
                   <Image
-                    src={project.image_url || fallbackImage}
+                    src={project.image_public_url || fallbackImage}
                     alt={project.title}
                     fill
                     className="object-cover"

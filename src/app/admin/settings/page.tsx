@@ -37,8 +37,13 @@ export default async function SettingsPage() {
               <Input name="phone_number" required defaultValue={settings?.phone_number ?? "+62 812 3456 7890"} />
             </div>
             <div className="space-y-2">
-              <label className="text-[10px] font-bold tracking-[0.1em] text-[#8a867f] uppercase">Instagram Handle</label>
-              <Input name="instagram_handle" defaultValue={settings?.instagram_handle ?? "@tropicallinedesign"} />
+              <label className="text-[10px] font-bold tracking-[0.1em] text-[#8a867f] uppercase">Instagram URL</label>
+              <Input
+                name="instagram_handle"
+                type="url"
+                defaultValue={settings?.instagram_handle ?? ""}
+                placeholder="https://www.instagram.com/tropicallinedesign/"
+              />
             </div>
           </div>
 
@@ -56,7 +61,12 @@ export default async function SettingsPage() {
 
           <div className="space-y-2">
             <label className="text-[10px] font-bold tracking-[0.1em] text-[#8a867f] uppercase">LinkedIn URL</label>
-            <Input name="linkedin_url" defaultValue={settings?.linkedin_url ?? ""} placeholder="https://www.linkedin.com/company/..." />
+            <Input
+              name="linkedin_url"
+              type="url"
+              defaultValue={settings?.linkedin_url ?? ""}
+              placeholder="https://www.linkedin.com/company/..."
+            />
           </div>
         </div>
 
