@@ -1,12 +1,14 @@
 import Image from "next/image";
-import { peopleData } from "@/data/about";
+import { listPublicTeamMembers } from "@/lib/public/about";
 
-export default function AboutPeoplePage() {
+export default async function AboutPeoplePage() {
+  const people = await listPublicTeamMembers();
+
   return (
     <div className="pb-24">
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-10">
-        {peopleData.map((person, index) => (
-          <div key={index} className="flex flex-col gap-2">
+        {people.map((person) => (
+          <div key={person.id} className="flex flex-col gap-2">
             <div className="relative aspect-[3/4] w-full mb-1">
               <Image
                 src={person.image}
@@ -14,10 +16,13 @@ export default function AboutPeoplePage() {
                 fill
                 className="object-cover rounded-sm grayscale hover:grayscale-0 transition-all duration-300"
                 sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                unoptimized={person.image.includes("/storage/v1/object/public/")}
               />
             </div>
             <div className="flex flex-col border-b border-neutral-300 pb-2 font-inter">
-              <h3 className="font-semibold text-sm text-neutral-900 leading-tight">{person.name}</h3>
+              <h3 className="min-h-[2.5rem] font-semibold text-sm leading-tight text-neutral-900">
+                {person.name}
+              </h3>
               <p className="text-xs text-neutral-500">{person.role}</p>
             </div>
           </div>

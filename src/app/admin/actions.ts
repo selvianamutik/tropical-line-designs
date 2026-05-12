@@ -148,6 +148,20 @@ export async function updatePortfolioGalleryOrder(formData: FormData) {
     throw new Error("Gallery items do not match the selected project.");
   }
 
+  const temporaryOffset = orderedItemIds.length + 1000;
+
+  for (const [index, itemId] of orderedItemIds.entries()) {
+    const { error } = await supabase
+      .from("portfolio_gallery_items")
+      .update({ sort_order: temporaryOffset + index })
+      .eq("id", itemId)
+      .eq("portfolio_id", portfolioId);
+
+    if (error) {
+      throw error;
+    }
+  }
+
   for (const [index, itemId] of orderedItemIds.entries()) {
     const { error } = await supabase
       .from("portfolio_gallery_items")
@@ -476,6 +490,7 @@ export async function upsertAward(formData: FormData) {
     organization: requiredText(formData, "organization", { minLength: 2, maxLength: 160 }),
     award_year: requiredYear(formData, "award_year"),
     related_project: optionalText(formData, "related_project", { maxLength: 160 }),
+    description: optionalText(formData, "description", { maxLength: 4000, allowMultiline: true }),
     ...emptyImageColumns(),
   };
   let mutationPayload: typeof payload = payload;

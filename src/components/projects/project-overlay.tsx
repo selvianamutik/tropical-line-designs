@@ -161,7 +161,7 @@ export function ProjectOverlay({
         )}>
           {/* Left Info Section */}
           <div className={cn(
-            "w-full md:w-[35%] p-8 md:p-16 flex flex-col gap-12 order-2 md:order-1",
+            "w-full md:w-[35%] p-8 md:p-16 flex flex-col gap-12 z-10 order-2 md:order-1",
             layout === "B" ? "justify-end" : "justify-between"
           )}>
             <div className="flex flex-col gap-2">

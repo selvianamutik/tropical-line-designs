@@ -148,6 +148,7 @@ create table if not exists public.awards (
   organization text not null,
   award_year integer not null,
   related_project text,
+  description text,
   image_bucket text not null default 'site-media',
   image_path text,
   image_mime_type text,

@@ -75,6 +75,7 @@ export interface AwardRecord {
   organization: string;
   award_year: number;
   related_project: string | null;
+  description: string | null;
   image_bucket: string;
   image_path: string | null;
   image_mime_type: string | null;

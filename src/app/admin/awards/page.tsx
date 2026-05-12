@@ -27,6 +27,7 @@ export default async function AwardsPage() {
             { name: "organization", label: "Issuing Organization", required: true, placeholder: "e.g. Asia Pacific Property Awards" },
             { name: "award_year", label: "Year", type: "number", required: true, min: 1900, max: 2099, placeholder: "2024" },
             { name: "related_project", label: "Related Project", placeholder: "e.g. Oasis Villa" },
+            { name: "description", label: "Description", type: "textarea", placeholder: "Award context or summary..." },
             {
               name: "image_file",
               label: "Award Image",
@@ -79,13 +80,15 @@ export default async function AwardsPage() {
                         { name: "organization", label: "Issuing Organization", required: true, defaultValue: award.organization },
                         { name: "award_year", label: "Year", type: "number", required: true, min: 1900, max: 2099, defaultValue: award.award_year },
                         { name: "related_project", label: "Related Project", defaultValue: award.related_project },
+                        { name: "description", label: "Description", type: "textarea", defaultValue: award.description },
                         {
                           name: "image_file",
                           label: "Award Image",
                           type: "file",
                           accept: "image/jpeg,image/png,image/webp,image/avif",
+                          currentMediaUrl: award.image_public_url,
                           helpText: award.image_public_url
-                            ? `Leave empty to keep the current image. New uploads will be converted to WebP automatically. Current: ${award.image_public_url}`
+                            ? "Leave empty to keep the current image. New uploads will be converted to WebP automatically."
                             : "Leave empty if you do not want to add an image yet. New uploads will be converted to WebP automatically.",
                         },
                       ]}

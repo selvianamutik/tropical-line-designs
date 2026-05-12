@@ -66,7 +66,15 @@ function formatProjectYear(commencedAt: string | null) {
 }
 
 function fallbackProjectImage(slug: string) {
-  return `https://placehold.co/1600x1000/e9dfd1/383532?text=${encodeURIComponent(slug)}`;
+  const svg = `
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000">
+      <rect width="1600" height="1000" fill="#e9dfd1"/>
+      <text x="50%" y="50%" text-anchor="middle" dominant-baseline="middle" fill="#383532" font-family="Arial, sans-serif" font-size="52">
+        ${slug}
+      </text>
+    </svg>
+  `;
+  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
 }
 
 function resolveProjectImage(row: PortfolioRow) {

@@ -94,8 +94,9 @@ export default async function TeamDirectoryPage() {
                           label: "Profile Photo",
                           type: "file",
                           accept: "image/jpeg,image/png,image/webp,image/avif",
+                          currentMediaUrl: member.image_public_url,
                           helpText: member.image_public_url
-                            ? `Leave empty to keep the current photo. New uploads will be converted to WebP automatically. Current: ${member.image_public_url}`
+                            ? "Leave empty to keep the current photo. New uploads will be converted to WebP automatically."
                             : "Leave empty if you do not want to add a photo yet. New uploads will be converted to WebP automatically.",
                         },
                         { 

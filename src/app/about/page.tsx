@@ -1,25 +1,30 @@
 import Image from "next/image";
-import { studioData, peopleData } from "@/data/about";
+import { studioData } from "@/data/about";
+import { listPublicTeamMembers } from "@/lib/public/about";
 
-export default function AboutStudioPage() {
-  const principal = peopleData[0]; // YeYeQ
+export default async function AboutStudioPage() {
+  const people = await listPublicTeamMembers();
+  const principal = people.find((person) => person.role.toLowerCase() === "principal") ?? people[0] ?? null;
 
   return (
     <div id="content" className="flex flex-col gap-12 font-sans scroll-mt-28">
       {/* Top Section: Image floats left, text wraps around it */}
       <div className="text-neutral-600 leading-relaxed font-light text-[17px] font-inter text-justify pb-12">
         {/* Float image so text wraps around it */}
-        <div className="float-left mr-8 mb-4 w-[200px] md:w-[240px] flex-shrink-0">
-          <div className="relative aspect-[3/4] w-full">
-            <Image
-              src={principal.image}
-              alt={principal.name}
-              fill
-              className="object-cover rounded-sm"
-              sizes="(max-width: 768px) 200px, 240px"
-            />
+        {principal ? (
+          <div className="float-left mr-8 mb-4 w-[200px] md:w-[240px] flex-shrink-0">
+            <div className="relative aspect-[3/4] w-full">
+              <Image
+                src={principal.image}
+                alt={principal.name}
+                fill
+                className="object-cover rounded-sm"
+                sizes="(max-width: 768px) 200px, 240px"
+                unoptimized={principal.image.includes("/storage/v1/object/public/")}
+              />
+            </div>
           </div>
-        </div>
+        ) : null}
         {/* Text flows around the float */}
         <p className="mb-6">{studioData.description[0]}</p>
         <p>{studioData.description[1]}</p>

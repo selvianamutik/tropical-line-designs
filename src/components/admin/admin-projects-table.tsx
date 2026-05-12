@@ -146,8 +146,9 @@ export function AdminProjectsTable({ projects, overlayProjects, portfolioGallery
                         label: "Cover Image",
                         type: "file",
                         accept: "image/jpeg,image/png,image/webp,image/avif",
+                        currentMediaUrl: project.image_public_url,
                         helpText: project.image_public_url
-                          ? `Leave empty to keep the current image. New uploads will be converted to WebP automatically. Current: ${project.image_public_url}`
+                          ? "Leave empty to keep the current image. New uploads will be converted to WebP automatically."
                           : "Leave empty if you do not want to add an image yet. New uploads will be converted to WebP automatically.",
                       },
                       { name: "description", label: "Description", type: "textarea", defaultValue: project.description },

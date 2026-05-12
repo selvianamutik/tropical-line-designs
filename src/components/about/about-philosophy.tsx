@@ -10,8 +10,8 @@ export function AboutPhilosophy() {
   if (pathname !== "/about") return null;
 
   return (
-    <div className="-mx-6 md:-mx-12 lg:-mx-24 bg-transparent py-12">
-      <div className="px-6 md:px-12 lg:px-60 flex flex-col gap-8 md:gap-12">
+    <div className="-mx-6 md:-mx-12 lg:-mx-0 bg-transparent py-12">
+      <div className="px-6 md:px-12 lg:px-40 flex flex-col gap-8 md:gap-12">
         <h2 className="text-center tracking-[0.2em] font-medium uppercase text-[#383532]">
           {studioData.philosophyTitle}
         </h2>

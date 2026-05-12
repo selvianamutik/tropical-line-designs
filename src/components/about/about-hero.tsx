@@ -6,6 +6,8 @@ import { AnimatePresence, motion } from "framer-motion";
 
 export function AboutHero() {
   const pathname = usePathname();
+  const heroImageUrl =
+    "https://zknqqulfyffbcrvsvatq.supabase.co/storage/v1/object/public/site-media/legacy/radison-blu/rb-3.webp";
 
   return (
     <AnimatePresence initial={false}>
@@ -21,11 +23,12 @@ export function AboutHero() {
           <div className="w-full h-24 bg-white"></div>
           <section className="relative w-full h-[60vh] md:h-[70vh] min-h-[400px]">
             <Image
-              src="https://images.unsplash.com/photo-1540541338287-41700207dee6?q=80&w=2070"
+              src={heroImageUrl}
               alt="Tropical Resort"
               fill
               className="object-cover"
               priority
+              unoptimized
             />
             <div className="absolute inset-0 bg-black/20" />
             <a href="#content" className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-white">

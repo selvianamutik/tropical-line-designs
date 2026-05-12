@@ -1,4 +1,3 @@
-import { randomUUID } from "crypto";
 import sharp from "sharp";
 import { createClient } from "@/lib/supabase/server";
 
@@ -27,6 +26,30 @@ function sanitizeSegment(value: string) {
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
+}
+
+function buildInitials(value: string) {
+  const parts = value
+    .trim()
+    .split(/[^A-Za-z0-9]+/)
+    .filter(Boolean);
+
+  const initials = parts.map((part) => part[0]?.toLowerCase() ?? "").join("");
+  return initials || "img";
+}
+
+async function nextImageIndex(supabase: Awaited<ReturnType<typeof createClient>>, folderPath: string) {
+  const prefix = folderPath;
+  const { data, error } = await supabase.storage.from(MEDIA_BUCKET).list(prefix, {
+    limit: 100,
+    sortBy: { column: "name", order: "asc" },
+  });
+
+  if (error) {
+    throw error;
+  }
+
+  return (data ?? []).filter((item) => item.id).length + 1;
 }
 
 export function getOptionalImageFile(formData: FormData, key: string) {
@@ -75,7 +98,10 @@ export async function uploadEntityImage({
   const supabase = await createClient();
   const slug = sanitizeSegment(slugSource) || owner;
   const convertedImage = await convertImageToWebp(file);
-  const objectPath = `${owner}/${slug}/${recordId}-${randomUUID()}.${convertedImage.extension}`;
+  const folderPath = `${owner}/${slug}`;
+  const initials = buildInitials(slugSource);
+  const index = await nextImageIndex(supabase, folderPath);
+  const objectPath = `${folderPath}/${initials}-${index}.${convertedImage.extension}`;
 
   const { error: uploadError } = await supabase.storage
     .from(MEDIA_BUCKET)
@@ -130,7 +156,10 @@ export async function uploadPortfolioGalleryAsset({
   const supabase = await createClient();
   const slug = sanitizeSegment(slugSource) || "portfolio-gallery";
   const convertedImage = await convertImageToWebp(file);
-  const objectPath = `portfolio-gallery/${slug}/${portfolioId}-${randomUUID()}.${convertedImage.extension}`;
+  const folderPath = `portfolio-gallery/${slug}`;
+  const initials = buildInitials(slugSource);
+  const index = await nextImageIndex(supabase, folderPath);
+  const objectPath = `${folderPath}/${initials}-${index}.${convertedImage.extension}`;
 
   const { error: uploadError } = await supabase.storage
     .from(MEDIA_BUCKET)
