@@ -5,10 +5,13 @@ import { motion, AnimatePresence } from "framer-motion";
 
 const INTRO_STORAGE_KEY = "has-seen-intro-v1";
 const INTRO_RESET_INTERVAL_MS = 5 * 60 * 1000;
+const REMOTE_INTRO_VIDEO_URL = "https://raw.githubusercontent.com/selvianamutik/tropical-line-designs/main/intro(1).mp4";
+const LOCAL_INTRO_VIDEO_URL = "/intro.mp4";
 
 export function IntroOverlay() {
   const [isVisible, setIsVisible] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
+  const [videoSrc, setVideoSrc] = useState(REMOTE_INTRO_VIDEO_URL);
 
   useEffect(() => {
     setIsMounted(true);
@@ -59,10 +62,16 @@ export function IntroOverlay() {
               muted
               loop
               playsInline
+              preload="metadata"
               className="w-full h-full object-cover scale-[1.05]"
               style={{ filter: "brightness(0.7) contrast(1.1)" }}
+              onError={() => {
+                if (videoSrc !== LOCAL_INTRO_VIDEO_URL) {
+                  setVideoSrc(LOCAL_INTRO_VIDEO_URL);
+                }
+              }}
             >
-              <source src="/intro.mp4" type="video/mp4" />
+              <source src={videoSrc} type="video/mp4" />
               {/* Fallback image if video fails or for testing */}
               <img 
                 src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=2070" 
