@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { ChevronDown, LogOut, User } from "lucide-react";
 import { logout } from "@/app/login/actions";
 
@@ -9,7 +10,9 @@ type AdminUserMenuProps = {
 };
 
 export function AdminUserMenu({ email }: AdminUserMenuProps) {
+  const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const containerRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -59,13 +62,27 @@ export function AdminUserMenu({ email }: AdminUserMenuProps) {
             <p className="mt-2 break-all text-sm font-semibold text-[#383532]">{email}</p>
           </div>
 
-          <form action={logout} className="pt-2">
+          <form
+            action={async () => {
+              setIsLoggingOut(true);
+              try {
+                await logout();
+                router.replace("/login");
+                router.refresh();
+              } finally {
+                setIsLoggingOut(false);
+                setIsOpen(false);
+              }
+            }}
+            className="pt-2"
+          >
             <button
               type="submit"
+              disabled={isLoggingOut}
               className="flex w-full items-center gap-3 rounded-sm px-3 py-2 text-left text-sm text-[#383532] transition-colors hover:bg-[#fff0ee] hover:text-[#9a3c2f]"
             >
               <LogOut className="h-4 w-4" />
-              <span>Logout</span>
+              <span>{isLoggingOut ? "Logging out..." : "Logout"}</span>
             </button>
           </form>
         </div>

@@ -1,4 +1,4 @@
-import Image from "next/image";
+import { TeamMemberPortrait } from "@/components/about/team-member-portrait";
 import { listPublicTeamMembers } from "@/lib/public/about";
 
 export default async function AboutPeoplePage() {
@@ -10,14 +10,7 @@ export default async function AboutPeoplePage() {
         {people.map((person) => (
           <div key={person.id} className="flex flex-col gap-2">
             <div className="relative aspect-[3/4] w-full mb-1">
-              <Image
-                src={person.image}
-                alt={person.name}
-                fill
-                className="object-cover rounded-sm grayscale hover:grayscale-0 transition-all duration-300"
-                sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                unoptimized={person.image.includes("/storage/v1/object/public/")}
-              />
+              <TeamMemberPortrait src={person.image} alt={person.name} />
             </div>
             <div className="flex flex-col border-b border-neutral-300 pb-2 font-inter">
               <h3 className="min-h-[2.5rem] font-semibold text-sm leading-tight text-neutral-900">

@@ -5,8 +5,18 @@ import { EmptyState } from "@/components/admin/empty-state";
 import { formatMonthYear } from "@/lib/admin/format";
 import { getDashboardMetrics } from "@/lib/admin/repository";
 
-const fallbackImage =
-  "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=400";
+function createProjectPlaceholder(title: string) {
+  const svg = `
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">
+      <rect width="400" height="400" fill="#ece6dc"/>
+      <text x="50%" y="50%" text-anchor="middle" dominant-baseline="middle" fill="#383532" font-family="Arial, sans-serif" font-size="22">
+        ${title}
+      </text>
+    </svg>
+  `;
+
+  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+}
 
 export default async function AdminDashboard() {
   const metrics = await getDashboardMetrics();
@@ -64,10 +74,11 @@ export default async function AdminDashboard() {
               <div className="flex items-center gap-6">
                 <div className="relative w-28 h-28 object-cover grayscale overflow-hidden">
                   <Image
-                    src={project.image_public_url || fallbackImage}
+                    src={project.image_public_url || createProjectPlaceholder(project.title)}
                     alt={project.title}
                     fill
                     className="object-cover"
+                    unoptimized={!project.image_public_url}
                   />
                 </div>
                 <div className="flex flex-col justify-center">

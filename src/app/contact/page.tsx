@@ -1,61 +1,89 @@
 import Image from "next/image";
-import { SiteNav } from "@/components/global/site-nav";
 import { MapClient } from "@/components/contact/map-client";
-import { ProjectsSimpleFooter } from "@/components/global/site-nav";
+import { ProjectsSimpleFooter } from "@/components/global/projects-simple-footer";
+import { SiteNav } from "@/components/global/site-nav";
+import { getPublicSiteSettings } from "@/lib/public/site-settings";
 
-export default function ContactPage() {
+export default async function ContactPage() {
+  const settings = await getPublicSiteSettings();
+  const addressLines = settings.officeAddress
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean);
+
   return (
     <main className="min-h-screen flex flex-col bg-[#FDFBF7]">
-      {/* Navbar will handle its own styling based on scroll/page */}
       <SiteNav />
 
-      {/* Main Content dengan Map Layout & Text Info */}
-      <section className="relative w-full pt-40 pb-24 flex flex-col items-center z-10">
-        {/* Grey strip background that goes behind the map */}
-        <div className="absolute top-[250px] inset-x-0 h-[300px] bg-[#e0ded6] -z-10" />
+      <section className="relative z-10 flex w-full flex-col items-center pt-40 pb-24">
+        <div className="absolute inset-x-0 top-[250px] -z-10 h-[300px] bg-[#e0ded6]" />
 
-        {/* Map Container */}
-        <div className="w-full max-w-5xl px-6 md:px-12 h-[500px]">
+        <div className="h-[500px] w-full max-w-5xl px-6 md:px-12">
           <MapClient />
         </div>
 
-        {/* Contact Information Cards */}
-        <div className="w-full max-w-4xl px-8 mt-24">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-12 text-[#383532]">
-            {/* Location */}
+        <div className="mt-24 w-full max-w-4xl px-8">
+          <div className="grid grid-cols-1 gap-12 text-[#383532] md:grid-cols-3">
             <div className="flex flex-col gap-4">
-              <h4 className="text-[10px] tracking-widest uppercase font-semibold text-[#8a867f]">Location</h4>
+              <h4 className="text-[10px] font-semibold uppercase tracking-widest text-[#8a867f]">Location</h4>
               <div>
-                <p className="font-medium text-lg leading-snug">Jl. Badak Agung VI No.8,</p>
-                <p className="font-light text-sm mt-1 leading-relaxed font-inter text-neutral-600">
-                  Sumerta Kelod, Kec. Denpasar Tim.<br/>
-                  Kota Denpasar, Bali 80234
-                </p>
+                {addressLines.length > 0 ? (
+                  <>
+                    <p className="text-lg font-medium leading-snug">{addressLines[0]}</p>
+                    <div className="mt-1 font-inter text-sm font-light leading-relaxed text-neutral-600">
+                      {addressLines.slice(1).map((line) => (
+                        <p key={line}>{line}</p>
+                      ))}
+                    </div>
+                  </>
+                ) : null}
               </div>
             </div>
 
-            {/* General Inquiries */}
             <div className="flex flex-col gap-4">
-              <h4 className="text-[10px] tracking-widest uppercase font-semibold text-[#8a867f]">General Inquiries</h4>
-              <p className="font-light text-base text-neutral-800 font-inter">bali.tropicalline@gmail.com</p>
+              <h4 className="text-[10px] font-semibold uppercase tracking-widest text-[#8a867f]">General Inquiries</h4>
+              <a
+                href={`mailto:${settings.contactEmail}`}
+                className="font-inter text-base font-light text-neutral-800 transition-opacity hover:opacity-70"
+              >
+                {settings.contactEmail}
+              </a>
             </div>
 
-            {/* Phone & Digital */}
             <div className="flex flex-col gap-10">
               <div className="flex flex-col gap-4">
-                <h4 className="text-[10px] tracking-widest uppercase font-semibold text-[#8a867f]">Call Our Studio</h4>
-                <p className="font-light text-base text-neutral-800 font-inter">+62 361 245990</p>
+                <h4 className="text-[10px] font-semibold uppercase tracking-widest text-[#8a867f]">Call Our Studio</h4>
+                <a
+                  href={`tel:${settings.phoneNumber.replace(/\s+/g, "")}`}
+                  className="font-inter text-base font-light text-neutral-800 transition-opacity hover:opacity-70"
+                >
+                  {settings.phoneNumber}
+                </a>
               </div>
 
               <div className="flex flex-col gap-4">
-                <h4 className="text-[10px] tracking-widest uppercase font-semibold text-[#8a867f]">Digital Presence</h4>
-                <div className="flex gap-6 font-inter font-light text-sm">
-                  <a href="#" className="flex items-center gap-1 hover:opacity-70 transition-opacity">
-                    Instagram <span>↗</span>
-                  </a>
-                  <a href="#" className="flex items-center gap-1 hover:opacity-70 transition-opacity">
-                    LinkedIn <span>↗</span>
-                  </a>
+                <h4 className="text-[10px] font-semibold uppercase tracking-widest text-[#8a867f]">Digital Presence</h4>
+                <div className="flex gap-6 font-inter text-sm font-light">
+                  {settings.instagramUrl ? (
+                    <a
+                      href={settings.instagramUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="flex items-center gap-1 transition-opacity hover:opacity-70"
+                    >
+                      Instagram <span aria-hidden="true">&uarr;</span>
+                    </a>
+                  ) : null}
+                  {settings.linkedinUrl ? (
+                    <a
+                      href={settings.linkedinUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="flex items-center gap-1 transition-opacity hover:opacity-70"
+                    >
+                      LinkedIn <span aria-hidden="true">&uarr;</span>
+                    </a>
+                  ) : null}
                 </div>
               </div>
             </div>
@@ -63,10 +91,8 @@ export default function ContactPage() {
         </div>
       </section>
 
-      {/* Footer Image */}
-      <section className="relative w-full h-[50vh] min-h-[400px]">
-        {/* Soft gradient to blend with bg */}
-        <div className="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-[#FDFBF7] to-transparent z-10" />
+      <section className="relative h-[50vh] min-h-[400px] w-full">
+        <div className="absolute inset-x-0 top-0 z-10 h-32 bg-gradient-to-b from-[#FDFBF7] to-transparent" />
         <Image
           src="/sofitel/so-1.jpg"
           alt="Coastal Resort"

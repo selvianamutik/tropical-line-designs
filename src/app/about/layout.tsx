@@ -2,7 +2,7 @@ import { SiteNav } from "@/components/global/site-nav";
 import { AboutSidebar } from "@/components/about/about-sidebar";
 import { AboutHero } from "@/components/about/about-hero";
 import { AboutPhilosophy } from "@/components/about/about-philosophy";
-import { ProjectsSimpleFooter } from "@/components/global/site-nav";
+import { ProjectsSimpleFooter } from "@/components/global/projects-simple-footer";
 import { ScrollToTop } from "@/components/global/scroll-to-top";
 
 export default function AboutLayout({

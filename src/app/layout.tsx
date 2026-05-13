@@ -18,8 +18,6 @@ export const metadata: Metadata = {
     "Company profile website and admin dashboard foundation built with Next.js and Supabase.",
 };
 
-import { IntroOverlay } from "@/components/global/intro-overlay";
-
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -28,7 +26,6 @@ export default function RootLayout({
   return (
     <html lang="id">
       <body className={`${inter.variable} ${manrope.variable}`}>
-        <IntroOverlay />
         {children}
       </body>
     </html>

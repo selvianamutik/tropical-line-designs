@@ -1,5 +1,5 @@
 import { SiteNav } from "@/components/global/site-nav";
-import { ProjectsSimpleFooter } from "@/components/global/site-nav";
+import { ProjectsSimpleFooter } from "@/components/global/projects-simple-footer";
 import { ProjectsGridPage } from "@/components/projects/projects-grid-page";
 import { listPublicProjects } from "@/lib/public/projects";
 

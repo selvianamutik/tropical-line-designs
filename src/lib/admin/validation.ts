@@ -9,6 +9,7 @@ type StringRuleOptions = {
   minLength?: number;
   maxLength?: number;
   allowMultiline?: boolean;
+  disallowNumericOnly?: boolean;
 };
 
 function getStringValue(formData: FormData, key: string) {
@@ -36,6 +37,10 @@ function assertStringRules(value: string, key: string, options: StringRuleOption
 
   if (options.maxLength && normalized.length > options.maxLength) {
     throw new Error(`Field "${key}" must be at most ${options.maxLength} characters.`);
+  }
+
+  if (options.disallowNumericOnly && /^\d+$/.test(normalized)) {
+    throw new Error(`Field "${key}" cannot contain numbers only.`);
   }
 
   return normalized;

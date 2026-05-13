@@ -14,7 +14,6 @@ import type { PublicProjectRecord } from "@/lib/public/projects";
 
 type AdminProjectsTableProps = {
   projects: PortfolioRecord[];
-  overlayProjects: PublicProjectRecord[];
   portfolioGalleryItems: PortfolioGalleryItemRecord[];
 };
 
@@ -39,15 +38,34 @@ const statusOptions = [
   { label: "On Hold", value: "On Hold" },
 ] as const;
 
-export function AdminProjectsTable({ projects, overlayProjects, portfolioGalleryItems }: AdminProjectsTableProps) {
-  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+function formatProjectYear(commencedAt: string | null) {
+  if (!commencedAt) {
+    return "Undated";
+  }
 
-  const overlayEntries = useMemo(() => {
-    const projectBySlug = new Map(overlayProjects.map((project) => [project.slug, project]));
-    return projects
-      .map((project) => projectBySlug.get(project.slug))
-      .filter((project): project is PublicProjectRecord => Boolean(project));
-  }, [overlayProjects, projects]);
+  const date = new Date(commencedAt);
+  if (Number.isNaN(date.getTime())) {
+    return "Undated";
+  }
+
+  return String(date.getUTCFullYear());
+}
+
+function fallbackProjectImage(slug: string) {
+  const svg = `
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000">
+      <rect width="1600" height="1000" fill="#e9dfd1"/>
+      <text x="50%" y="50%" text-anchor="middle" dominant-baseline="middle" fill="#383532" font-family="Arial, sans-serif" font-size="52">
+        ${slug}
+      </text>
+    </svg>
+  `;
+
+  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+}
+
+export function AdminProjectsTable({ projects, portfolioGalleryItems }: AdminProjectsTableProps) {
+  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
 
   const portfolioGalleryItemsByPortfolioId = useMemo(() => {
     const grouped = new Map<string, PortfolioGalleryItemRecord[]>();
@@ -58,6 +76,34 @@ export function AdminProjectsTable({ projects, overlayProjects, portfolioGallery
     }
     return grouped;
   }, [portfolioGalleryItems]);
+
+  const overlayEntries = useMemo<PublicProjectRecord[]>(
+    () =>
+      projects.map((project) => {
+        const coverImage = project.image_public_url || fallbackProjectImage(project.slug);
+        const galleryImages = (portfolioGalleryItemsByPortfolioId.get(project.id) ?? []).map(
+          (item) => item.media_asset_url,
+        );
+
+        return {
+          slug: project.slug,
+          title: project.title,
+          location: project.location,
+          year: formatProjectYear(project.commenced_at),
+          type: project.category ?? "Landscape Project",
+          image: coverImage,
+          images: galleryImages.length > 0 ? galleryImages : [coverImage],
+          galleryLayout: project.gallery_layout,
+          status: project.status,
+          architect: project.architect ?? undefined,
+          landscapeConsultant: project.landscape_consultant ?? undefined,
+          client: project.client ?? undefined,
+          projectSize: project.project_size ?? undefined,
+          description: project.description ?? undefined,
+        };
+      }),
+    [portfolioGalleryItemsByPortfolioId, projects],
+  );
 
   const selectedProject = selectedIndex !== null ? overlayEntries[selectedIndex] : null;
 
@@ -136,7 +182,6 @@ export function AdminProjectsTable({ projects, overlayProjects, portfolioGallery
                         name: "gallery_layout",
                         label: "Gallery Layout",
                         type: "select",
-                        previewKind: "gallery-layout",
                         required: true,
                         defaultValue: project.gallery_layout,
                         options: [...galleryLayoutOptions],

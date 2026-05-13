@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { loginWithPassword, sendMagicLink } from "@/app/login/actions";
+import { loginWithPassword } from "@/app/login/actions";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function LoginPage({
@@ -40,7 +40,7 @@ export default async function LoginPage({
             </div>
             <div className="grid gap-4 border-t border-[#d8cfbf] pt-8 text-[11px] uppercase tracking-[0.18em] text-[#8a867f] md:grid-cols-3">
               <span>Password Login</span>
-              <span>Magic Link</span>
+              <span>Admin Only</span>
               <span>Protected Routes</span>
             </div>
           </section>
@@ -49,7 +49,7 @@ export default async function LoginPage({
             <div>
               <h2 className="text-xl font-bold">Login Admin</h2>
               <p className="mt-2 text-sm text-[#8a867f]">
-                Gunakan email admin yang sudah diotorisasi. Magic link hanya bekerja untuk akun yang sudah ada.
+                Gunakan email admin yang sudah diotorisasi untuk masuk ke dashboard.
               </p>
             </div>
 
@@ -100,12 +100,6 @@ export default async function LoginPage({
                   className="inline-flex h-11 items-center justify-center rounded-sm bg-[#383532] px-4 text-[11px] font-bold uppercase tracking-[0.16em] text-[#fdfbf7] transition-colors hover:bg-[#4a4642]"
                 >
                   Login dengan Password
-                </button>
-                <button
-                  formAction={sendMagicLink}
-                  className="inline-flex h-11 items-center justify-center rounded-sm border border-[#d9d4ca] bg-transparent px-4 text-[11px] font-bold uppercase tracking-[0.16em] text-[#383532] transition-colors hover:bg-[#f4efe6]"
-                >
-                  Kirim Magic Link
                 </button>
               </div>
             </form>

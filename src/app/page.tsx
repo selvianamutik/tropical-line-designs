@@ -1,4 +1,5 @@
 import { HeroSection, HeroProject } from "@/components/landing/hero-section";
+import { IntroOverlay } from "@/components/global/intro-overlay";
 import { listPublicProjects } from "@/lib/public/projects";
 
 export default async function HomePage() {
@@ -28,6 +29,7 @@ export default async function HomePage() {
 
   return (
     <main className="h-screen overflow-hidden bg-[#fdf9f1] text-white">
+      <IntroOverlay />
       <HeroSection projects={heroProjects} />
     </main>
   );

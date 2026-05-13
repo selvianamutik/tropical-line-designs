@@ -17,6 +17,21 @@ type CollaboratorRow = {
   created_at: string;
 };
 
+function formatCollaboratorExpertise(value: string) {
+  return value
+    .trim()
+    .replace(/\s+/g, " ")
+    .split(" ")
+    .map((part) => {
+      if (part.length <= 3) {
+        return part.toUpperCase();
+      }
+
+      return part.charAt(0).toUpperCase() + part.slice(1).toLowerCase();
+    })
+    .join(" ");
+}
+
 function fallbackCollaboratorImage(company: string) {
   const svg = `
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800">
@@ -53,7 +68,7 @@ export const listPublicCollaborators = cache(async (): Promise<PublicCollaborato
   return ((data ?? []) as CollaboratorRow[]).map((row) => ({
     id: row.id,
     company: row.company,
-    expertiseType: row.expertise_type,
+    expertiseType: formatCollaboratorExpertise(row.expertise_type),
     image: resolveCollaboratorImage(row),
   }));
 });

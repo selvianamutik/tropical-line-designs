@@ -1,4 +1,5 @@
 import { Search } from "lucide-react";
+import { AdminToastProvider } from "@/components/admin/admin-toast";
 import { AdminSidebar } from "@/components/admin/admin-sidebar";
 import { AdminUserMenu } from "@/components/admin/admin-user-menu";
 import { requireAdmin } from "@/lib/admin/auth";
@@ -36,7 +37,7 @@ export default async function AdminLayout({
 
         {/* MAIN CONTENT AREA */}
         <main className="flex-1 overflow-auto">
-          {children}
+          <AdminToastProvider>{children}</AdminToastProvider>
         </main>
       </div>
     </div>

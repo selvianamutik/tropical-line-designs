@@ -24,6 +24,147 @@ import {
   uploadPortfolioGalleryAsset,
 } from "@/lib/admin/media";
 
+function revalidatePublicProjectPaths() {
+  revalidatePath("/");
+  revalidatePath("/projects");
+}
+
+function revalidatePublicAboutPaths() {
+  revalidatePath("/about");
+  revalidatePath("/about/people");
+  revalidatePath("/about/collaborators");
+  revalidatePath("/about/awards");
+}
+
+async function executeAwardMutationWithFallbacks(args: {
+  supabase: Awaited<ReturnType<typeof requireAdmin>>["supabase"];
+  id: string | null;
+  recordId: string;
+  payload: {
+    id: string;
+    title: string;
+    organization: string;
+    award_year: number;
+    related_project: string | null;
+    description: string | null;
+    image_bucket: string | null;
+    image_path: string | null;
+    image_mime_type: string | null;
+    image_size_bytes: number | null;
+  };
+}) {
+  const { supabase, id, recordId, payload } = args;
+  const {
+    description: _description,
+    related_project: _relatedProject,
+    image_bucket: _imageBucket,
+    image_path: _imagePath,
+    image_mime_type: _imageMimeType,
+    image_size_bytes: _imageSizeBytes,
+    ...basePayload
+  } = payload;
+
+  void _description;
+  void _relatedProject;
+  void _imageBucket;
+  void _imagePath;
+  void _imageMimeType;
+  void _imageSizeBytes;
+
+  const variants = [
+    payload,
+    { ...payload, description: undefined },
+    { ...payload, related_project: undefined },
+    { ...payload, description: undefined, related_project: undefined },
+    basePayload,
+    { ...basePayload, description: payload.description },
+    { ...basePayload, related_project: payload.related_project },
+  ];
+
+  let lastError: unknown = null;
+
+  for (const variant of variants) {
+    if (id) {
+      const { error } = await supabase
+        .from("awards")
+        .update(variant)
+        .eq("id", id);
+
+      if (!error) {
+        return;
+      }
+
+      if (error.code !== "42703" && error.code !== "PGRST204") {
+        throw error;
+      }
+
+      lastError = error;
+      continue;
+    }
+
+    const insertPayload = "id" in variant ? variant : { ...variant, id: recordId };
+    const { error } = await supabase
+      .from("awards")
+      .insert([insertPayload]);
+
+    if (!error) {
+      return;
+    }
+
+    if (error.code !== "42703" && error.code !== "PGRST204") {
+      throw error;
+    }
+
+    lastError = error;
+  }
+
+  if (lastError) {
+    throw lastError;
+  }
+}
+
+async function syncAwardImageColumns(args: {
+  supabase: Awaited<ReturnType<typeof requireAdmin>>["supabase"];
+  awardId: string;
+  image: {
+    image_bucket: string;
+    image_path: string;
+    image_mime_type: string;
+    image_size_bytes: number;
+  };
+}) {
+  const { supabase, awardId, image } = args;
+  const { data, error } = await supabase
+    .from("awards")
+    .select("image_bucket,image_path,image_mime_type,image_size_bytes")
+    .eq("id", awardId)
+    .maybeSingle();
+
+  if (error) {
+    throw error;
+  }
+
+  const needsSync =
+    !data ||
+    data.image_bucket !== image.image_bucket ||
+    data.image_path !== image.image_path ||
+    data.image_mime_type !== image.image_mime_type ||
+    data.image_size_bytes !== image.image_size_bytes;
+
+  if (!needsSync) {
+    return;
+  }
+
+  const { error: syncError } = await supabase
+    .from("awards")
+    .update(image)
+    .eq("id", awardId);
+
+  if (syncError) {
+    throw syncError;
+  }
+}
+
 function getObjectPathFromMediaAssetsRelation(
   relation: { object_path: string } | { object_path: string }[] | null,
 ) {
@@ -33,7 +174,7 @@ function getObjectPathFromMediaAssetsRelation(
 export async function upsertPortfolio(formData: FormData) {
   const { supabase } = await requireAdmin();
   const id = optionalText(formData, "id", { maxLength: 64 });
-  const title = requiredText(formData, "title", { minLength: 2, maxLength: 160 });
+  const title = requiredText(formData, "title", { minLength: 2, maxLength: 160, disallowNumericOnly: true });
   const recordId = id ?? crypto.randomUUID();
   const imageFile = getOptionalImageFile(formData, "image_file");
   const existingRecord = id
@@ -48,7 +189,7 @@ export async function upsertPortfolio(formData: FormData) {
     id: recordId,
     title,
     slug: slugifyOrThrow(title),
-    location: requiredText(formData, "location", { minLength: 2, maxLength: 160 }),
+    location: requiredText(formData, "location", { minLength: 2, maxLength: 160, disallowNumericOnly: true }),
     status: requiredEnumValue(formData, "status", PROJECT_STATUSES),
     commenced_at: optionalMonthValue(formData, "commenced_at"),
     client: optionalText(formData, "client", { maxLength: 160 }),
@@ -98,6 +239,7 @@ export async function upsertPortfolio(formData: FormData) {
 
   revalidatePath("/admin");
   revalidatePath("/admin/projects");
+  revalidatePublicProjectPaths();
 }
 
 export async function deletePortfolio(formData: FormData) {
@@ -115,6 +257,7 @@ export async function deletePortfolio(formData: FormData) {
 
   revalidatePath("/admin");
   revalidatePath("/admin/projects");
+  revalidatePublicProjectPaths();
 }
 
 export async function updatePortfolioGalleryOrder(formData: FormData) {
@@ -330,8 +473,8 @@ export async function upsertTeamMember(formData: FormData) {
 
   const payload = {
     id: recordId,
-    name: requiredText(formData, "name", { minLength: 2, maxLength: 160 }),
-    role: requiredText(formData, "role", { minLength: 2, maxLength: 120 }),
+    name: requiredText(formData, "name", { minLength: 2, maxLength: 160, disallowNumericOnly: true }),
+    role: requiredText(formData, "role", { minLength: 2, maxLength: 120, disallowNumericOnly: true }),
     email: requiredEmail(formData, "email"),
     status: requiredEnumValue(formData, "status", MEMBER_STATUSES),
     ...emptyImageColumns(),
@@ -374,6 +517,7 @@ export async function upsertTeamMember(formData: FormData) {
 
   revalidatePath("/admin");
   revalidatePath("/admin/team");
+  revalidatePublicAboutPaths();
 }
 
 export async function deleteTeamMember(formData: FormData) {
@@ -391,6 +535,7 @@ export async function deleteTeamMember(formData: FormData) {
 
   revalidatePath("/admin");
   revalidatePath("/admin/team");
+  revalidatePublicAboutPaths();
 }
 
 export async function upsertCollaborator(formData: FormData) {
@@ -408,8 +553,8 @@ export async function upsertCollaborator(formData: FormData) {
 
   const payload = {
     id: recordId,
-    company: requiredText(formData, "company", { minLength: 2, maxLength: 160 }),
-    expertise_type: requiredText(formData, "expertise_type", { minLength: 2, maxLength: 120 }),
+    company: requiredText(formData, "company", { minLength: 2, maxLength: 160, disallowNumericOnly: true }),
+    expertise_type: requiredText(formData, "expertise_type", { minLength: 2, maxLength: 120, disallowNumericOnly: true }),
     contact_email: requiredEmail(formData, "contact_email"),
     joint_projects: optionalNonNegativeInteger(formData, "joint_projects", { max: 100000 }),
     ...emptyImageColumns(),
@@ -452,6 +597,7 @@ export async function upsertCollaborator(formData: FormData) {
 
   revalidatePath("/admin");
   revalidatePath("/admin/collaborators");
+  revalidatePublicAboutPaths();
 }
 
 export async function deleteCollaborator(formData: FormData) {
@@ -469,6 +615,7 @@ export async function deleteCollaborator(formData: FormData) {
 
   revalidatePath("/admin");
   revalidatePath("/admin/collaborators");
+  revalidatePublicAboutPaths();
 }
 
 export async function upsertAward(formData: FormData) {
@@ -486,16 +633,17 @@ export async function upsertAward(formData: FormData) {
 
   const payload = {
     id: recordId,
-    title: requiredText(formData, "title", { minLength: 2, maxLength: 160 }),
-    organization: requiredText(formData, "organization", { minLength: 2, maxLength: 160 }),
+    title: requiredText(formData, "title", { minLength: 2, maxLength: 160, disallowNumericOnly: true }),
+    organization: requiredText(formData, "organization", { minLength: 2, maxLength: 160, disallowNumericOnly: true }),
     award_year: requiredYear(formData, "award_year"),
     related_project: optionalText(formData, "related_project", { maxLength: 160 }),
     description: optionalText(formData, "description", { maxLength: 4000, allowMultiline: true }),
     ...emptyImageColumns(),
   };
   let mutationPayload: typeof payload = payload;
+  let uploadedImage: Awaited<ReturnType<typeof uploadEntityImage>> | null = null;
   if (imageFile) {
-    const uploadedImage = await uploadEntityImage({
+    uploadedImage = await uploadEntityImage({
       owner: "awards",
       recordId,
       slugSource: payload.title,
@@ -512,17 +660,19 @@ export async function upsertAward(formData: FormData) {
     mutationPayload = rest as typeof payload;
   }
 
-  if (id) {
-    const { error } = await supabase
-      .from("awards")
-      .update(mutationPayload)
-      .eq("id", id);
-    if (error) throw error;
-  } else {
-    const { error } = await supabase
-      .from("awards")
-      .insert([mutationPayload]);
-    if (error) throw error;
+  await executeAwardMutationWithFallbacks({
+    supabase,
+    id,
+    recordId,
+    payload: mutationPayload,
+  });
+
+  if (uploadedImage) {
+    await syncAwardImageColumns({
+      supabase,
+      awardId: recordId,
+      image: uploadedImage,
+    });
   }
 
   if (imageFile && existingRecord?.data?.image_path) {
@@ -531,6 +681,7 @@ export async function upsertAward(formData: FormData) {
 
   revalidatePath("/admin");
   revalidatePath("/admin/awards");
+  revalidatePublicAboutPaths();
 }
 
 export async function deleteAward(formData: FormData) {
@@ -548,13 +699,14 @@ export async function deleteAward(formData: FormData) {
 
   revalidatePath("/admin");
   revalidatePath("/admin/awards");
+  revalidatePublicAboutPaths();
 }
 
 export async function updateSiteSettings(formData: FormData) {
   const { supabase } = await requireAdmin();
   const payload = {
     id: "default",
-    studio_name: requiredText(formData, "studio_name", { minLength: 2, maxLength: 160 }),
+    studio_name: requiredText(formData, "studio_name", { minLength: 2, maxLength: 160, disallowNumericOnly: true }),
     contact_email: requiredEmail(formData, "contact_email"),
     phone_number: requiredText(formData, "phone_number", { minLength: 6, maxLength: 50 }),
     office_address: requiredText(formData, "office_address", { minLength: 6, maxLength: 500, allowMultiline: true }),
@@ -571,4 +723,8 @@ export async function updateSiteSettings(formData: FormData) {
 
   revalidatePath("/admin");
   revalidatePath("/admin/settings");
+  revalidatePath("/");
+  revalidatePath("/projects");
+  revalidatePath("/about");
+  revalidatePath("/contact");
 }

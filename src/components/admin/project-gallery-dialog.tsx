@@ -5,6 +5,7 @@ import { useMemo, useState, useTransition } from "react";
 import { GripVertical, Images, Trash2, Upload } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { addPortfolioGalleryImage, deletePortfolioGalleryImage, updatePortfolioGalleryOrder } from "@/app/admin/actions";
+import { useAdminToast } from "@/components/admin/admin-toast";
 import { Button } from "@/components/admin/ui/Button";
 import { Input } from "@/components/admin/ui/Input";
 import { Modal } from "@/components/admin/ui/Modal";
@@ -35,6 +36,7 @@ function isSupabaseStorageUrl(value: string) {
 
 export function ProjectGalleryDialog({ project, portfolioGalleryItems }: ProjectGalleryDialogProps) {
   const router = useRouter();
+  const { showToast } = useAdminToast();
   const [isOpen, setIsOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [isUploading, startUploadTransition] = useTransition();
@@ -42,6 +44,8 @@ export function ProjectGalleryDialog({ project, portfolioGalleryItems }: Project
   const [portfolioGalleryItemState, setPortfolioGalleryItemState] = useState(portfolioGalleryItems);
   const [draggedId, setDraggedId] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [selectedFilePreviewUrl, setSelectedFilePreviewUrl] = useState<string | null>(null);
+  const [previewImageUrl, setPreviewImageUrl] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const hasChanges = useMemo(
@@ -83,6 +87,7 @@ export function ProjectGalleryDialog({ project, portfolioGalleryItems }: Project
     setPortfolioGalleryItemState(portfolioGalleryItems);
     setDraggedId(null);
     setSelectedFile(null);
+    setSelectedFilePreviewUrl(null);
     setErrorMessage(null);
   };
 
@@ -95,10 +100,20 @@ export function ProjectGalleryDialog({ project, portfolioGalleryItems }: Project
       try {
         setErrorMessage(null);
         await updatePortfolioGalleryOrder(formData);
+        showToast({
+          tone: "success",
+          title: "Urutan galeri berhasil disimpan.",
+        });
         router.refresh();
         setIsOpen(false);
       } catch (error) {
-        setErrorMessage(error instanceof Error ? error.message : "Gagal menyimpan urutan galeri.");
+        const message = error instanceof Error ? error.message : "Gagal menyimpan urutan galeri.";
+        setErrorMessage(message);
+        showToast({
+          tone: "error",
+          title: "Gagal menyimpan urutan galeri.",
+          description: message,
+        });
       }
     });
   };
@@ -115,11 +130,21 @@ export function ProjectGalleryDialog({ project, portfolioGalleryItems }: Project
       try {
         setErrorMessage(null);
         await addPortfolioGalleryImage(formData);
+        showToast({
+          tone: "success",
+          title: "Foto galeri berhasil diunggah.",
+        });
         router.refresh();
         setSelectedFile(null);
         setIsOpen(false);
       } catch (error) {
-        setErrorMessage(error instanceof Error ? error.message : "Gagal mengunggah foto galeri.");
+        const message = error instanceof Error ? error.message : "Gagal mengunggah foto galeri.";
+        setErrorMessage(message);
+        showToast({
+          tone: "error",
+          title: "Gagal mengunggah foto galeri.",
+          description: message,
+        });
       }
     });
   };
@@ -135,10 +160,20 @@ export function ProjectGalleryDialog({ project, portfolioGalleryItems }: Project
       try {
         setErrorMessage(null);
         await deletePortfolioGalleryImage(formData);
+        showToast({
+          tone: "success",
+          title: "Foto galeri berhasil dihapus.",
+        });
         router.refresh();
         setIsOpen(false);
       } catch (error) {
-        setErrorMessage(error instanceof Error ? error.message : "Gagal menghapus foto galeri.");
+        const message = error instanceof Error ? error.message : "Gagal menghapus foto galeri.";
+        setErrorMessage(message);
+        showToast({
+          tone: "error",
+          title: "Gagal menghapus foto galeri.",
+          description: message,
+        });
       }
     });
   };
@@ -168,7 +203,7 @@ export function ProjectGalleryDialog({ project, portfolioGalleryItems }: Project
         title={`Gallery Order: ${project.title}`}
         description="Drag dan drop thumbnail untuk mengubah urutan foto di overlay project."
       >
-        <div className="space-y-6">
+        <div className="space-y-6 overflow-x-hidden">
           {errorMessage ? (
             <div className="rounded-sm border border-[#e7b4ad] bg-[#fff0ee] px-4 py-3 text-sm text-[#9a3c2f]">
               {errorMessage}
@@ -211,8 +246,39 @@ export function ProjectGalleryDialog({ project, portfolioGalleryItems }: Project
                 <Input
                   type="file"
                   accept="image/jpeg,image/png,image/webp,image/avif"
-                  onChange={(event) => setSelectedFile(event.target.files?.[0] ?? null)}
+                  onChange={(event) => {
+                    const file = event.target.files?.[0] ?? null;
+                    if (selectedFilePreviewUrl) {
+                      URL.revokeObjectURL(selectedFilePreviewUrl);
+                    }
+                    setSelectedFile(file);
+                    setSelectedFilePreviewUrl(file ? URL.createObjectURL(file) : null);
+                  }}
                 />
+                {selectedFilePreviewUrl ? (
+                  <button
+                    type="button"
+                    onClick={() => setPreviewImageUrl(selectedFilePreviewUrl)}
+                    className="flex items-center gap-3 rounded-sm border border-[#eadfcd] bg-[#fbf7f0] p-2 text-left transition-colors hover:border-[#d97706]"
+                  >
+                    <div className="relative h-16 w-24 overflow-hidden rounded-[2px] bg-[#efe7dc]">
+                      <Image
+                        src={selectedFilePreviewUrl}
+                        alt="Selected gallery image preview"
+                        fill
+                        sizes="96px"
+                        className="object-cover"
+                        unoptimized
+                      />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#8a867f]">
+                        Selected image
+                      </p>
+                      <p className="truncate text-sm text-[#383532]">Open selected image preview</p>
+                    </div>
+                  </button>
+                ) : null}
                 <p className="text-[11px] text-[#8a867f]">
                   Upload JPG, PNG, WebP, atau AVIF hingga 10MB. File akan dikonversi otomatis ke WebP.
                 </p>
@@ -248,7 +314,7 @@ export function ProjectGalleryDialog({ project, portfolioGalleryItems }: Project
                     setPortfolioGalleryItemState((current) => moveItem(current, draggedId, item.id));
                     setDraggedId(null);
                   }}
-                  className="flex items-center gap-4 rounded-sm border border-[#e9e6df] bg-white p-3 transition-colors hover:border-[#d9d4ca]"
+                  className="flex min-w-0 items-center gap-3 rounded-sm border border-[#e9e6df] bg-white p-3 transition-colors hover:border-[#d9d4ca] md:gap-4"
                 >
                   <div className="flex w-8 shrink-0 items-center justify-center text-[11px] font-bold uppercase tracking-[0.12em] text-[#8a867f]">
                     {String(index + 1).padStart(2, "0")}
@@ -262,9 +328,11 @@ export function ProjectGalleryDialog({ project, portfolioGalleryItems }: Project
                       unoptimized={isSupabaseStorageUrl(item.media_asset_url)}
                     />
                   </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-semibold text-[#383532]">{item.caption || item.media_asset_path}</p>
-                    <p className="mt-1 text-[11px] text-[#8a867f]">
+                  <div className="min-w-0 flex-1 overflow-hidden pr-1">
+                    <p className="block max-w-full truncate text-sm font-semibold text-[#383532]">
+                      {item.caption || item.media_asset_path}
+                    </p>
+                    <p className="mt-1 truncate text-[11px] text-[#8a867f]">
                       Drag untuk memindahkan posisi foto pada overlay.
                     </p>
                   </div>
@@ -285,16 +353,17 @@ export function ProjectGalleryDialog({ project, portfolioGalleryItems }: Project
               ))}
             </div>
 
-            <div className="flex justify-between gap-3 border-t border-[#e9e6df] pt-4">
+            <div className="flex flex-col gap-3 border-t border-[#e9e6df] pt-4 sm:flex-row sm:items-center sm:justify-between">
               <Button
                 type="button"
                 variant="outline"
                 onClick={resetState}
                 disabled={isPending || isUploading || isDeleting || !hasChanges}
+                className="w-full sm:w-auto"
               >
                 Reset Order
               </Button>
-              <div className="flex gap-3">
+              <div className="flex flex-col gap-3 sm:flex-row">
                 <Button
                   type="button"
                   variant="outline"
@@ -303,6 +372,7 @@ export function ProjectGalleryDialog({ project, portfolioGalleryItems }: Project
                     resetState();
                   }}
                   disabled={isPending || isUploading || isDeleting}
+                  className="w-full sm:w-auto"
                 >
                   Cancel
                 </Button>
@@ -310,6 +380,7 @@ export function ProjectGalleryDialog({ project, portfolioGalleryItems }: Project
                   type="button"
                   onClick={handleSave}
                   disabled={isPending || isUploading || isDeleting || !hasChanges}
+                  className="w-full sm:w-auto"
                 >
                   {isPending ? "Saving..." : "Save Order"}
                 </Button>
@@ -318,6 +389,26 @@ export function ProjectGalleryDialog({ project, portfolioGalleryItems }: Project
             </div>
           )}
         </div>
+      </Modal>
+
+      <Modal
+        isOpen={Boolean(previewImageUrl)}
+        onClose={() => setPreviewImageUrl(null)}
+        title="Gallery Image Preview"
+        description="Selected image preview."
+      >
+        {previewImageUrl ? (
+          <div className="relative aspect-[4/3] w-full overflow-hidden rounded-sm bg-[#efe7dc]">
+            <Image
+              src={previewImageUrl}
+              alt="Selected gallery image preview"
+              fill
+              sizes="(max-width: 768px) 100vw, 720px"
+              className="object-contain"
+              unoptimized
+            />
+          </div>
+        ) : null}
       </Modal>
     </>
   );

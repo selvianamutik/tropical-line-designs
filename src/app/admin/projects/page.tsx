@@ -4,12 +4,10 @@ import { AdminProjectsTable } from "@/components/admin/admin-projects-table";
 import { ResourceFormDialog } from "@/components/admin/resource-form-dialog";
 import { upsertPortfolio } from "@/app/admin/actions";
 import { listPortfolioGalleryItems, listPortfolios } from "@/lib/admin/repository";
-import { listPublicProjects } from "@/lib/public/projects";
 
 export default async function ProjectManagerPage() {
-  const [projects, overlayProjects, portfolioGalleryItems] = await Promise.all([
+  const [projects, portfolioGalleryItems] = await Promise.all([
     listPortfolios(),
-    listPublicProjects(),
     listPortfolioGalleryItems(),
   ]);
 
@@ -51,7 +49,6 @@ export default async function ProjectManagerPage() {
               name: "gallery_layout",
               label: "Gallery Layout",
               type: "select",
-              previewKind: "gallery-layout",
               required: true,
               defaultValue: "D",
               options: [
@@ -85,7 +82,7 @@ export default async function ProjectManagerPage() {
           description="Run the SQL schema, then start adding portfolio entries from this admin page."
         />
       ) : (
-        <AdminProjectsTable projects={projects} overlayProjects={overlayProjects} portfolioGalleryItems={portfolioGalleryItems} />
+        <AdminProjectsTable projects={projects} portfolioGalleryItems={portfolioGalleryItems} />
       )}
     </AdminPageShell>
   );

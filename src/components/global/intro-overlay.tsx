@@ -3,14 +3,23 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
+const INTRO_STORAGE_KEY = "has-seen-intro-v1";
+const INTRO_RESET_INTERVAL_MS = 5 * 60 * 1000;
+
 export function IntroOverlay() {
   const [isVisible, setIsVisible] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
     setIsMounted(true);
-    const hasSeenIntro = localStorage.getItem("has-seen-intro-v1");
-    if (!hasSeenIntro) {
+    const seenIntroAt = localStorage.getItem(INTRO_STORAGE_KEY);
+    const hasActiveSeenState =
+      seenIntroAt !== null &&
+      Number.isFinite(Number(seenIntroAt)) &&
+      Date.now() - Number(seenIntroAt) < INTRO_RESET_INTERVAL_MS;
+
+    if (!hasActiveSeenState) {
+      localStorage.removeItem(INTRO_STORAGE_KEY);
       // Small delay to ensure smooth mounting
       const timer = setTimeout(() => {
         setIsVisible(true);
@@ -23,7 +32,7 @@ export function IntroOverlay() {
 
   const handleDismiss = () => {
     setIsVisible(false);
-    localStorage.setItem("has-seen-intro-v1", "true");
+    localStorage.setItem(INTRO_STORAGE_KEY, Date.now().toString());
     // Restore scrolling
     document.body.style.overflow = "";
   };

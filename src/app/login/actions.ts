@@ -17,6 +17,11 @@ function encodeError(message: string) {
   return `/login?error=${encodeURIComponent(message)}`;
 }
 
+function encodeMessage(message: string, next?: string) {
+  const base = `/login?message=${encodeURIComponent(message)}`;
+  return next ? `${base}&next=${encodeURIComponent(next)}` : base;
+}
+
 function getSafeNext(formData: FormData) {
   const next = formData.get("next");
   return typeof next === "string" && next.startsWith("/") ? next : "/admin";
@@ -24,13 +29,21 @@ function getSafeNext(formData: FormData) {
 
 export async function loginWithPassword(formData: FormData) {
   const supabase = await createClient();
-  const email = getRequiredValue(formData, "email");
-  const password = getRequiredValue(formData, "password");
   const next = getSafeNext(formData);
+  let email: string;
+  let password: string;
+
+  try {
+    email = getRequiredValue(formData, "email");
+    password = getRequiredValue(formData, "password");
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Email dan password wajib diisi.";
+    redirect(`${encodeError(message)}&next=${encodeURIComponent(next)}`);
+  }
 
   const { error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) {
-    redirect(encodeError("Email atau password tidak valid."));
+    redirect(`${encodeError("Email atau password tidak valid.")}&next=${encodeURIComponent(next)}`);
   }
 
   const { data: userData, error: userError } = await supabase.auth.getUser();
@@ -45,8 +58,15 @@ export async function loginWithPassword(formData: FormData) {
 
 export async function sendMagicLink(formData: FormData) {
   const supabase = await createClient();
-  const email = getRequiredValue(formData, "email");
   const next = getSafeNext(formData);
+  let email: string;
+
+  try {
+    email = getRequiredValue(formData, "email");
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Email wajib diisi.";
+    redirect(`${encodeError(message)}&next=${encodeURIComponent(next)}`);
+  }
 
   const { error } = await supabase.auth.signInWithOtp({
     email,
@@ -60,12 +80,11 @@ export async function sendMagicLink(formData: FormData) {
     redirect(`${encodeError("Gagal mengirim magic link.")}&next=${encodeURIComponent(next)}`);
   }
 
-  redirect(`/login?message=${encodeURIComponent("Magic link berhasil dikirim. Cek email Anda.")}&next=${encodeURIComponent(next)}`);
+  redirect(encodeMessage("Magic link berhasil dikirim. Cek email Anda.", next));
 }
 
 export async function logout() {
   const supabase = await createClient();
   await supabase.auth.signOut();
   revalidatePath("/", "layout");
-  redirect("/login");
 }

@@ -4,6 +4,8 @@ import Image from "next/image";
 import { useState } from "react";
 import { useFormStatus } from "react-dom";
 import { Pencil, Plus } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useAdminToast } from "@/components/admin/admin-toast";
 import { Button } from "@/components/admin/ui/Button";
 import { Input } from "@/components/admin/ui/Input";
 import { Modal } from "@/components/admin/ui/Modal";
@@ -27,7 +29,6 @@ interface FormField {
   accept?: string;
   helpText?: string;
   currentMediaUrl?: string | null;
-  previewKind?: "gallery-layout";
 }
 
 interface ResourceFormDialogProps {
@@ -38,20 +39,8 @@ interface ResourceFormDialogProps {
   fields: FormField[];
   triggerLabel?: string;
   initialId?: string;
+  successMessage?: string;
 }
-
-const galleryLayoutPreviewMap: Record<string, string[]> = {
-  A: ["col-span-2 row-span-2", "col-span-1", "col-span-1", "col-span-2"],
-  B: ["row-span-2", "col-span-2", "col-span-1", "col-span-1"],
-  C: ["col-span-3", "col-span-1", "col-span-1", "col-span-1"],
-  D: ["col-span-2", "col-span-1 row-span-2", "col-span-1", "col-span-2"],
-  E: ["col-span-1 row-span-2", "col-span-2", "col-span-2", "col-span-1"],
-  F: ["col-span-1", "col-span-1", "col-span-1 row-span-2", "col-span-2"],
-  G: ["col-span-2 row-span-2", "col-span-1", "col-span-1", "col-span-1", "col-span-1"],
-  H: ["col-span-1 row-span-2", "col-span-2 row-span-2", "col-span-1", "col-span-1"],
-  I: ["col-span-3", "col-span-1", "col-span-1", "col-span-1", "col-span-3"],
-  J: ["col-span-1", "col-span-2", "col-span-1", "col-span-2", "col-span-1"],
-};
 
 function SubmitButton({ label }: { label: string }) {
   const { pending } = useFormStatus();
@@ -63,36 +52,6 @@ function isSupabaseStorageUrl(value: string) {
   return value.includes("/storage/v1/object/public/");
 }
 
-function GalleryLayoutPreview({ layout }: { layout: string }) {
-  const blocks = galleryLayoutPreviewMap[layout] ?? galleryLayoutPreviewMap.D;
-
-  return (
-    <div className="rounded-sm border border-[#d9d4ca] bg-[#fbf7f0] p-3">
-      <div className="mb-2 flex items-center justify-between">
-        <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#8a867f]">
-          Layout {layout}
-        </span>
-        <span className="text-[10px] text-[#a5a098]">Preview</span>
-      </div>
-      <div className="grid h-28 grid-cols-3 gap-1.5">
-        {blocks.map((blockClass, index) => (
-          <div
-            key={`${layout}-${index}`}
-            className={cn(
-              "relative overflow-hidden rounded-[2px] border border-[#eadfcd] bg-gradient-to-br from-[#efe3cf] to-[#f7efe2]",
-              blockClass,
-            )}
-          >
-            <span className="absolute left-1.5 top-1.5 text-[9px] font-bold text-[#9a5f0c]">
-              {index + 1}
-            </span>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
 export function ResourceFormDialog({
   title,
   description,
@@ -101,18 +60,14 @@ export function ResourceFormDialog({
   fields,
   triggerLabel,
   initialId,
+  successMessage,
 }: ResourceFormDialogProps) {
+  const router = useRouter();
+  const { showToast } = useAdminToast();
   const [isOpen, setIsOpen] = useState(false);
   const [previewImageUrl, setPreviewImageUrl] = useState<string | null>(null);
   const [previewImageLabel, setPreviewImageLabel] = useState("");
-  const [selectValues, setSelectValues] = useState<Record<string, string>>(
-    () =>
-      Object.fromEntries(
-        fields
-          .filter((field) => field.type === "select")
-          .map((field) => [field.name, field.defaultValue?.toString() ?? ""]),
-      ),
-  );
+  const [selectedFilePreviews, setSelectedFilePreviews] = useState<Record<string, string>>({});
 
   return (
     <>
@@ -130,15 +85,26 @@ export function ResourceFormDialog({
       <Modal isOpen={isOpen} onClose={() => setIsOpen(false)} title={title} description={description}>
         <form
           action={async (formData) => {
-            await action(formData);
-            setIsOpen(false);
+            try {
+              await action(formData);
+              showToast({
+                tone: "success",
+                title: successMessage ?? (initialId ? "Perubahan berhasil disimpan." : "Data berhasil ditambahkan."),
+              });
+              router.refresh();
+              setIsOpen(false);
+            } catch (error) {
+              showToast({
+                tone: "error",
+                title: "Gagal menyimpan data.",
+                description: error instanceof Error ? error.message : "Terjadi kesalahan saat memproses permintaan.",
+              });
+            }
           }}
         >
           {initialId ? <input type="hidden" name="id" value={initialId} /> : null}
           <div className="space-y-4">
             {fields.map((field) => {
-              const selectPreviewValue = selectValues[field.name] ?? field.defaultValue?.toString() ?? "";
-
               return (
                 <div key={field.name} className="space-y-2">
                   <label className="text-[10px] font-bold uppercase tracking-[0.1em] text-[#8a867f]">
@@ -156,38 +122,27 @@ export function ResourceFormDialog({
                       )}
                     />
                   ) : field.type === "select" ? (
-                    <div className={cn(field.previewKind ? "grid gap-3 md:grid-cols-[minmax(0,1fr)_180px]" : "space-y-0")}>
-                      <div className="relative">
-                        <select
-                          name={field.name}
-                          required={field.required}
-                          defaultValue={field.defaultValue?.toString() ?? ""}
-                          onChange={(event) =>
-                            setSelectValues((current) => ({
-                              ...current,
-                              [field.name]: event.target.value,
-                            }))
-                          }
-                          className={cn(
-                            "flex h-10 w-full cursor-pointer appearance-none rounded-sm border border-[#d9d4ca] bg-transparent px-3 py-2 pr-10 text-sm text-[#383532] transition-colors focus-visible:border-[#d97706] focus-visible:outline-none",
-                          )}
-                        >
-                          {field.placeholder ? <option value="" disabled>{field.placeholder}</option> : null}
-                          {field.options?.map((option) => (
-                            <option key={option.value} value={option.value}>
-                              {option.label}
-                            </option>
-                          ))}
-                        </select>
-                        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-[#a5a098]">
-                          <svg className="h-4 w-4 fill-current" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                            <path d="M9.293 12.95 10 13.657 15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
-                          </svg>
-                        </div>
+                    <div className="relative">
+                      <select
+                        name={field.name}
+                        required={field.required}
+                        defaultValue={field.defaultValue?.toString() ?? ""}
+                        className={cn(
+                          "flex h-10 w-full cursor-pointer appearance-none rounded-sm border border-[#d9d4ca] bg-transparent px-3 py-2 pr-10 text-sm text-[#383532] transition-colors focus-visible:border-[#d97706] focus-visible:outline-none",
+                        )}
+                      >
+                        {field.placeholder ? <option value="" disabled>{field.placeholder}</option> : null}
+                        {field.options?.map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
+                      <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-[#a5a098]">
+                        <svg className="h-4 w-4 fill-current" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                          <path d="M9.293 12.95 10 13.657 15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
+                        </svg>
                       </div>
-                      {field.previewKind === "gallery-layout" ? (
-                        <GalleryLayoutPreview layout={selectPreviewValue || "D"} />
-                      ) : null}
                     </div>
                   ) : field.type === "file" ? (
                     <div className="space-y-2">
@@ -196,7 +151,57 @@ export function ResourceFormDialog({
                         type="file"
                         required={field.required}
                         accept={field.accept}
+                        onChange={(event) => {
+                          const file = event.target.files?.[0];
+                          setSelectedFilePreviews((current) => {
+                            if (!current[field.name]) {
+                              return file ? current : current;
+                            }
+
+                            URL.revokeObjectURL(current[field.name]);
+                            const next = { ...current };
+                            delete next[field.name];
+                            return next;
+                          });
+
+                          if (!file) {
+                            return;
+                          }
+
+                          const objectUrl = URL.createObjectURL(file);
+                          setSelectedFilePreviews((current) => ({
+                            ...current,
+                            [field.name]: objectUrl,
+                          }));
+                        }}
                       />
+                      {selectedFilePreviews[field.name] ? (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setPreviewImageUrl(selectedFilePreviews[field.name]);
+                            setPreviewImageLabel(`${field.label} preview`);
+                          }}
+                          className="flex items-center gap-3 rounded-sm border border-[#eadfcd] bg-[#fbf7f0] p-2 text-left transition-colors hover:border-[#d97706]"
+                        >
+                          <div className="relative h-14 w-20 overflow-hidden rounded-[2px] bg-[#efe7dc]">
+                            <Image
+                              src={selectedFilePreviews[field.name]}
+                              alt={`${field.label} preview`}
+                              fill
+                              sizes="80px"
+                              className="object-cover"
+                              unoptimized
+                            />
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#8a867f]">
+                              Selected image
+                            </p>
+                            <p className="truncate text-sm text-[#383532]">Open selected image preview</p>
+                          </div>
+                        </button>
+                      ) : null}
                       {field.currentMediaUrl ? (
                         <button
                           type="button"

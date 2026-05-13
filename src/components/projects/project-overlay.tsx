@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { useEffect } from "react";
 import { X, ArrowLeft, ArrowRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { PublicProjectRecord, GalleryLayout } from "@/lib/public/projects";
@@ -63,6 +64,17 @@ export function ProjectOverlay({
   onPrev,
   showImageOrderLabels = false,
 }: ProjectOverlayProps) {
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   const images = project.images || [project.image];
@@ -75,7 +87,7 @@ export function ProjectOverlay({
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 z-[2000] bg-white overflow-y-auto"
+        className="fixed inset-0 z-[2000] bg-white overflow-y-auto md:overflow-y-hidden"
       >
         {/* Navigation Controls - Top Close Button */}
         <div className="fixed top-0 inset-x-0 z-[2010] flex justify-end items-center p-6 md:p-10 pointer-events-none">
@@ -161,7 +173,7 @@ export function ProjectOverlay({
         )}>
           {/* Left Info Section */}
           <div className={cn(
-            "w-full md:w-[35%] p-8 md:p-16 flex flex-col gap-12 z-10 order-2 md:order-1",
+            "w-full md:w-[35%] p-8 md:p-16 flex flex-col gap-12 z-10 order-2 md:order-1 md:max-h-screen md:overflow-y-auto",
             layout === "B" ? "justify-end" : "justify-between"
           )}>
             <div className="flex flex-col gap-2">
@@ -219,12 +231,20 @@ export function ProjectOverlay({
                 </div>
               )}
             </div>
+
+            {project.description && (
+              <div className={cn("border-t border-[#d9d4ca] pt-8", layout !== "H" && "md:text-end")}>
+                <p className="text-sm leading-7 normal-case tracking-normal text-[#383532]">
+                  {project.description}
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Right Gallery Section */}
           <motion.div 
             layoutId={`image-${project.slug}`}
-            className={`"w-full md:w-[65%] h-full min-h-screen bg-[#FDFBF7] order-1 md:order-2 flex items-center justify-center" ${layout === "H" ? "md:justify-end" :"md:justify-start"}`}
+            className={`"w-full md:w-[65%] h-full min-h-screen bg-[#FDFBF7] order-1 md:order-2 flex items-center justify-center md:max-h-screen md:overflow-y-auto" ${layout === "H" ? "md:justify-end" :"md:justify-start"}`}
           >
              <ProjectGalleryTemplate layout={layout} images={images} showImageOrderLabels={showImageOrderLabels} />
           </motion.div>
