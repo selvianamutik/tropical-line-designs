@@ -54,6 +54,16 @@ async function executeAwardMutationWithFallbacks(args: {
   };
 }) {
   const { supabase, id, recordId, payload } = args;
+  type AwardMutationPayload = typeof payload;
+  type AwardFallbackPayload = Omit<
+    AwardMutationPayload,
+    "id" | "description" | "related_project" | "image_bucket" | "image_path" | "image_mime_type" | "image_size_bytes"
+  > & {
+    description?: AwardMutationPayload["description"];
+    related_project?: AwardMutationPayload["related_project"];
+    id?: AwardMutationPayload["id"];
+  };
+
   const {
     description: _description,
     related_project: _relatedProject,
@@ -71,7 +81,7 @@ async function executeAwardMutationWithFallbacks(args: {
   void _imageMimeType;
   void _imageSizeBytes;
 
-  const variants = [
+  const variants: AwardFallbackPayload[] = [
     payload,
     { ...payload, description: undefined },
     { ...payload, related_project: undefined },
