@@ -7,7 +7,7 @@ import { AnimatePresence, motion } from "framer-motion";
 export function AboutHero() {
   const pathname = usePathname();
   const heroImageUrl =
-    "https://zknqqulfyffbcrvsvatq.supabase.co/storage/v1/object/public/site-media/portofolio-galeri/radison-blu/rb-3.webp";
+    "https://zknqqulfyffbcrvsvatq.supabase.co/storage/v1/object/public/site-media/portfolio-gallery/radisson-blu/rb-3.webp";
 
   return (
     <AnimatePresence initial={false}>

@@ -24,7 +24,7 @@ const fallbackSiteSettings: PublicSiteSettings = {
   contactEmail: "bali.tropicalline@gmail.com",
   phoneNumber: "+62 361 245990",
   officeAddress: "Jl. Badak Agung VI No.8,\nSumerta Kelod, Kec. Denpasar Tim.\nKota Denpasar, Bali 80234",
-  instagramUrl: null,
+  instagramUrl: "https://www.instagram.com/tropicallinedesign/",
   linkedinUrl: null,
 };
 
@@ -50,7 +50,7 @@ export const getPublicSiteSettings = cache(async (): Promise<PublicSiteSettings>
     contactEmail: row.contact_email,
     phoneNumber: row.phone_number,
     officeAddress: row.office_address,
-    instagramUrl: row.instagram_handle,
-    linkedinUrl: row.linkedin_url,
+    instagramUrl: row.instagram_handle ?? fallbackSiteSettings.instagramUrl,
+    linkedinUrl: row.linkedin_url ?? fallbackSiteSettings.linkedinUrl,
   };
 });

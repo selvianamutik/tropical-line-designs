@@ -24,20 +24,27 @@ function ProjectHoverCard({
   return (
     <div 
       onClick={onClick}
-      className="absolute left-1/2 top-1/2 z-10 h-full w-full -translate-x-1/2 -translate-y-1/2 rounded-[2px] bg-[#dedede] p-5 text-black opacity-0 shadow-[0_16px_45px_rgba(0,0,0,0.18)] transition-all duration-300 group-hover:opacity-100 cursor-pointer"
+      className="absolute inset-0 z-10 cursor-pointer bg-[linear-gradient(180deg,rgba(249,245,238,0.42)_0%,rgba(244,238,228,0.86)_38%,rgba(236,229,218,0.97)_100%)] p-4 text-[#2e2924] opacity-0 shadow-[0_20px_45px_rgba(29,23,16,0.16)] backdrop-blur-[2px] transition-all duration-500 ease-out group-hover:opacity-100 sm:p-5"
     >
-      <button className="rounded-[2px] border border-black/55 bg-[#f7f7f7] px-3 py-1 text-[12px] uppercase leading-none">
-        {title}
-      </button>
-
-      <div className="mt-[58px] flex items-start justify-between gap-6">
-        <div>
-          <p className="text-[11px] font-bold leading-none">Location</p>
-          <p className="mt-1 text-[11px] leading-none">{location}</p>
+      <div className="flex h-full flex-col justify-between">
+        <div className="min-w-0">
+          <p className="text-[9px] uppercase tracking-[0.18em] text-[#8b7e6d]">
+            View Project
+          </p>
+          <h3 className="mt-2 max-w-[16ch] text-[13px] font-semibold leading-5 tracking-[-0.01em] text-[#201c18] sm:text-[14px]">
+            {title}
+          </h3>
         </div>
-        <div>
-          <p className="text-[11px] font-bold leading-none">Project Size</p>
-          <p className="mt-1 text-[11px] leading-none">{projectSize ?? "-"}</p>
+
+        <div className="grid grid-cols-2 gap-4 border-t border-[#d8cdbd] pt-3">
+          <div className="min-w-0">
+            <p className="text-[9px] uppercase tracking-[0.16em] text-[#8b7e6d]">Location</p>
+            <p className="mt-1 truncate text-[11px] leading-5 text-[#3c342c]">{location}</p>
+          </div>
+          <div className="min-w-0">
+            <p className="text-[9px] uppercase tracking-[0.16em] text-[#8b7e6d]">Project Size</p>
+            <p className="mt-1 truncate text-[11px] leading-5 text-[#3c342c]">{projectSize ?? "-"}</p>
+          </div>
         </div>
       </div>
     </div>
@@ -48,10 +55,10 @@ function ProjectGridCard({ project, onClick }: { project: PublicProjectRecord; o
   return (
     <article className="group relative h-[150px] overflow-hidden rounded-[3px] bg-[#ddd]">
       <div
-        className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-transform duration-500 group-hover:scale-[1.04]"
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-transform duration-700 ease-out group-hover:scale-[1.02]"
         style={{ backgroundImage: `url("${project.image}")` }}
       />
-      <div className="absolute inset-0 bg-black/0 transition-colors duration-300 group-hover:bg-black/20" />
+      <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,0.02)_0%,rgba(0,0,0,0.08)_100%)] transition-colors duration-500 group-hover:bg-[linear-gradient(180deg,rgba(0,0,0,0.06)_0%,rgba(0,0,0,0.22)_100%)]" />
 
       <ProjectHoverCard
         title={project.title}

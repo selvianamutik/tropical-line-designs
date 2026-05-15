@@ -13,9 +13,13 @@ const manrope = Manrope({
 });
 
 export const metadata: Metadata = {
-  title: "Integrated Corporate Digital Identity",
+  title: "Tropical Line Design",
   description:
-    "Company profile website and admin dashboard foundation built with Next.js and Supabase.",
+    "As a landscape design company based in Bali, a tropical paradise in Indonesia, Tropical Line Design focuses on creating landscape designs with a natural and tropical ambiance combined with elegance to fulfill clients' expectations.",
+  icons: {
+    icon: "/favicon.ico",
+    shortcut: "/favicon.ico",
+  },
 };
 
 export default function RootLayout({

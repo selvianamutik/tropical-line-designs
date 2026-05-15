@@ -2,9 +2,11 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import headerLogo from "@/assets/images (3).jpg";
 
 export type NavItem = {
   href: string;
@@ -66,7 +68,7 @@ export function SiteNav({
         )}
       >
         <div className="mx-auto flex w-full max-w-[1184px] items-baseline justify-between ">
-          <Link
+           <Link
             href="/"
             className="text-[23px] font-bold uppercase leading-none"
           >
