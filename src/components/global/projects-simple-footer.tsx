@@ -15,8 +15,9 @@ export async function ProjectsSimpleFooter() {
 
   const primaryLinks = [
     { href: "/projects", label: "Projects" },
-    { href: "/about", label: "About Studio" },
+    { href: "/about", label: "Principal" },
     { href: "/about/people", label: "People" },
+    { href: "/about/services", label: "Services" },
     { href: "/about/collaborators", label: "Collaborators" },
     { href: "/about/awards", label: "Awards" },
   ];
@@ -47,12 +48,10 @@ export async function ProjectsSimpleFooter() {
               {settings.studioName}
             </p>
             <h2 className="mt-5 max-w-[16ch] font-sans text-[30px] font-semibold leading-[1.02] tracking-[-0.04em] text-[#383532] sm:text-[38px]">
-              Holistic tropical landscape design shaped for Bali and beyond.
+              {settings.footerHeading}
             </h2>
             <p className="mt-5 max-w-[58ch] text-sm leading-7 text-[#6f6b65]">
-              As a landscape design company based in Bali, a tropical paradise in Indonesia, Tropical Line Design
-              focuses on creating landscape designs with a natural and tropical ambiance combined with elegance to
-              fulfill clients&apos; expectations.
+              {settings.footerDescription}
             </p>
           </div>
 

@@ -40,8 +40,19 @@ export default async function ProjectManagerPage() {
               ]
             },
             { name: "commenced_at", label: "Commenced Date", type: "month" },
+            { name: "display_order", label: "Display Order", type: "number", defaultValue: 0, min: 0 },
             { name: "client", label: "Client", placeholder: "e.g. Private Client" },
-            { name: "category", label: "Category", placeholder: "e.g. Hospitality" },
+            {
+              name: "category",
+              label: "Project Type",
+              type: "select",
+              defaultValue: "Design",
+              options: [
+                { label: "Build", value: "Build" },
+                { label: "Design", value: "Design" },
+                { label: "Design and Build", value: "Design and Build" },
+              ],
+            },
             { name: "architect", label: "Architect", placeholder: "e.g. Han Awal & Partners" },
             { name: "landscape_consultant", label: "Landscape Consultant", placeholder: "e.g. Bensley Design Studio" },
             { name: "project_size", label: "Project Size", placeholder: "e.g. 2.1 ha" },

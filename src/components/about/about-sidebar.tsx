@@ -5,8 +5,9 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 
 const sidebarLinks = [
-  { name: "Studio", href: "/about" },
+  { name: "Principal", href: "/about" },
   { name: "People", href: "/about/people" },
+  { name: "Services", href: "/about/services" },
   { name: "Collaborators", href: "/about/collaborators" },
   { name: "Awards", href: "/about/awards" },
 ];

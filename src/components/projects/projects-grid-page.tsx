@@ -11,14 +11,14 @@ type ProjectsGridPageProps = {
 type ProjectHoverCardProps = {
   title: string;
   location: string;
-  projectSize?: string;
+  projectType: string;
   onClick?: () => void;
 };
 
 function ProjectHoverCard({
   title,
   location,
-  projectSize,
+  projectType,
   onClick,
 }: ProjectHoverCardProps) {
   return (
@@ -42,8 +42,8 @@ function ProjectHoverCard({
             <p className="mt-1 truncate text-[11px] leading-5 text-[#3c342c]">{location}</p>
           </div>
           <div className="min-w-0">
-            <p className="text-[9px] uppercase tracking-[0.16em] text-[#8b7e6d]">Project Size</p>
-            <p className="mt-1 truncate text-[11px] leading-5 text-[#3c342c]">{projectSize ?? "-"}</p>
+            <p className="text-[9px] uppercase tracking-[0.16em] text-[#8b7e6d]">Project Type</p>
+            <p className="mt-1 truncate text-[11px] leading-5 text-[#3c342c]">{projectType}</p>
           </div>
         </div>
       </div>
@@ -63,7 +63,7 @@ function ProjectGridCard({ project, onClick }: { project: PublicProjectRecord; o
       <ProjectHoverCard
         title={project.title}
         location={project.location}
-        projectSize={project.projectSize}
+        projectType={project.type}
         onClick={onClick}
       />
     </article>

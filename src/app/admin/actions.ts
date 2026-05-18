@@ -207,6 +207,7 @@ export async function upsertPortfolio(formData: FormData) {
     architect: optionalText(formData, "architect", { maxLength: 160 }),
     landscape_consultant: optionalText(formData, "landscape_consultant", { maxLength: 160 }),
     project_size: optionalText(formData, "project_size", { maxLength: 80 }),
+    display_order: optionalNonNegativeInteger(formData, "display_order", { max: 100000 }),
     description: optionalText(formData, "description", { maxLength: 4000, allowMultiline: true }),
     gallery_layout: requiredEnumValue(formData, "gallery_layout", GALLERY_LAYOUTS),
     ...emptyImageColumns(),
@@ -230,18 +231,28 @@ export async function upsertPortfolio(formData: FormData) {
     mutationPayload = rest as typeof payload;
   }
 
-  if (id) {
-    const { error } = await supabase
+  const executePortfolioMutation = async (payloadVariant: typeof mutationPayload) => {
+    if (id) {
+      return supabase
+        .from("portfolios")
+        .update(payloadVariant)
+        .eq("id", id);
+    }
+
+    return supabase
       .from("portfolios")
-      .update(mutationPayload)
-      .eq("id", id);
-    if (error) throw error;
-  } else {
-    const { error } = await supabase
-      .from("portfolios")
-      .insert([mutationPayload]);
-    if (error) throw error;
+      .insert([payloadVariant]);
+  };
+
+  let mutationResult = await executePortfolioMutation(mutationPayload);
+
+  if (mutationResult.error?.code === "PGRST204" || mutationResult.error?.code === "42703") {
+    const { display_order: _displayOrder, ...legacyPayload } = mutationPayload;
+    void _displayOrder;
+    mutationResult = await executePortfolioMutation(legacyPayload as typeof mutationPayload);
   }
+
+  if (mutationResult.error) throw mutationResult.error;
 
   if (imageFile && existingRecord?.data?.image_path) {
     await removeEntityImage(existingRecord.data.image_path);
@@ -712,8 +723,63 @@ export async function deleteAward(formData: FormData) {
   revalidatePublicAboutPaths();
 }
 
+function requiredBooleanValue(formData: FormData, key: string) {
+  const value = requiredText(formData, key, { maxLength: 5 });
+  if (value !== "true" && value !== "false") {
+    throw new Error(`Field "${key}" has an invalid value.`);
+  }
+  return value === "true";
+}
+
+export async function upsertService(formData: FormData) {
+  const { supabase } = await requireAdmin();
+  const id = optionalText(formData, "id", { maxLength: 64 });
+  const recordId = id ?? crypto.randomUUID();
+  const payload = {
+    id: recordId,
+    title: requiredText(formData, "title", { minLength: 2, maxLength: 160, disallowNumericOnly: true }),
+    description: optionalText(formData, "description", { maxLength: 1200, allowMultiline: true }),
+    sort_order: optionalNonNegativeInteger(formData, "sort_order", { max: 100000 }),
+    is_active: requiredBooleanValue(formData, "is_active"),
+  };
+
+  if (id) {
+    const { error } = await supabase
+      .from("services")
+      .update(payload)
+      .eq("id", id);
+    if (error) throw error;
+  } else {
+    const { error } = await supabase
+      .from("services")
+      .insert([payload]);
+    if (error) throw error;
+  }
+
+  revalidatePath("/admin");
+  revalidatePath("/admin/services");
+  revalidatePublicAboutPaths();
+}
+
+export async function deleteService(formData: FormData) {
+  const { supabase } = await requireAdmin();
+  const id = requiredText(formData, "id", { maxLength: 64 });
+  const { error } = await supabase
+    .from("services")
+    .delete()
+    .eq("id", id);
+
+  if (error) throw error;
+
+  revalidatePath("/admin");
+  revalidatePath("/admin/services");
+  revalidatePublicAboutPaths();
+}
+
 export async function updateSiteSettings(formData: FormData) {
   const { supabase } = await requireAdmin();
+  const footerHeading = requiredText(formData, "footer_heading", { minLength: 2, maxLength: 180, allowMultiline: true });
+  const footerDescription = requiredText(formData, "footer_description", { minLength: 6, maxLength: 800, allowMultiline: true });
   const payload = {
     id: "default",
     studio_name: requiredText(formData, "studio_name", { minLength: 2, maxLength: 160, disallowNumericOnly: true }),
@@ -728,8 +794,27 @@ export async function updateSiteSettings(formData: FormData) {
   const { error } = await supabase
     .from("site_settings")
     .upsert(payload, { onConflict: "id" });
-    
+
   if (error) throw error;
+
+  const { error: footerError } = await supabase
+    .from("site_settings")
+    .update({
+      footer_heading: footerHeading,
+      footer_description: footerDescription,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", "default");
+
+  if (footerError?.code === "PGRST204" || footerError?.code === "42703") {
+    throw new Error(
+      "Footer copy belum bisa disimpan karena kolom footer_heading/footer_description belum tersedia di Supabase. Jalankan migration site_settings_footer_copy lalu refresh schema cache.",
+    );
+  }
+
+  if (footerError) {
+    throw footerError;
+  }
 
   revalidatePath("/admin");
   revalidatePath("/admin/settings");

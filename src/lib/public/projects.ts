@@ -32,6 +32,7 @@ type PortfolioRow = {
   architect?: string | null;
   landscape_consultant?: string | null;
   project_size?: string | null;
+  display_order?: number | null;
   description: string | null;
   gallery_layout: GalleryLayout;
   image_url?: string | null;
@@ -116,6 +117,10 @@ function mapPortfolioToPublicProject(row: PortfolioRow, galleryImages: string[])
 export const listPublicProjects = cache(async (): Promise<PublicProjectRecord[]> => {
   let portfolios: PortfolioRow[] = [];
   const selectVariants = [
+    "id,title,slug,location,status,commenced_at,client,category,architect,landscape_consultant,project_size,display_order,description,gallery_layout,image_url,image_bucket,image_path,created_at",
+    "id,title,slug,location,status,commenced_at,client,category,architect,landscape_consultant,project_size,display_order,description,gallery_layout,image_bucket,image_path,created_at",
+    "id,title,slug,location,status,commenced_at,client,category,architect,landscape_consultant,project_size,display_order,description,image_bucket,image_path,created_at",
+    "id,title,slug,location,status,commenced_at,client,category,architect,landscape_consultant,project_size,display_order,description,image_path,created_at",
     "id,title,slug,location,status,commenced_at,client,category,architect,landscape_consultant,project_size,description,gallery_layout,image_url,image_bucket,image_path,created_at",
     "id,title,slug,location,status,commenced_at,client,category,architect,landscape_consultant,project_size,description,gallery_layout,image_bucket,image_path,created_at",
     "id,title,slug,location,status,commenced_at,client,category,architect,landscape_consultant,project_size,description,image_bucket,image_path,created_at",
@@ -130,6 +135,10 @@ export const listPublicProjects = cache(async (): Promise<PublicProjectRecord[]>
     const query = await supabaseAdmin
       .from("portfolios")
       .select(selectClause)
+      .order(selectClause.includes("display_order") ? "display_order" : "commenced_at", {
+        ascending: selectClause.includes("display_order"),
+        nullsFirst: false,
+      })
       .order("commenced_at", { ascending: false, nullsFirst: false })
       .order("created_at", { ascending: false });
 

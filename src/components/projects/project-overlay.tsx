@@ -5,7 +5,6 @@ import { useEffect } from "react";
 import { X, ArrowLeft, ArrowRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { PublicProjectRecord, GalleryLayout } from "@/lib/public/projects";
-import { cn } from "@/lib/utils";
 
 interface ProjectOverlayProps {
   project: PublicProjectRecord;
@@ -87,7 +86,7 @@ export function ProjectOverlay({
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 z-[2000] bg-white overflow-y-auto md:overflow-y-hidden"
+        className="fixed inset-0 z-[2000] overflow-y-auto bg-[#f8f3ea]"
       >
         {/* Navigation Controls - Top Close Button */}
         <div className="fixed top-0 inset-x-0 z-[2010] flex justify-end items-center p-6 md:p-10 pointer-events-none">
@@ -99,169 +98,117 @@ export function ProjectOverlay({
           </button>
         </div>
 
-        {/* Mobile Layout (Simplified & Aesthetic) */}
-        <div className="flex flex-col md:hidden pb-32">
-          {/* Hero Image */}
-          <motion.div 
-            layoutId={`image-${project.slug}`}
-            className="relative aspect-[4/5] w-full bg-[#f8f3ea]"
-          >
-            <ProjectImage src={project.image} alt={project.title} priority orderIndex={0} showOrderLabel={showImageOrderLabels} />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
-            <div className="absolute bottom-8 left-6 right-6 text-white">
-              <h1 className="text-3xl font-bold uppercase tracking-tight leading-none mb-2">
-                {project.title}
-              </h1>
-              <p className="text-sm uppercase tracking-widest opacity-90">
-                {project.location}
-              </p>
+        <motion.section
+          layoutId={`image-${project.slug}`}
+          className="relative min-h-screen bg-[#f8f3ea]"
+        >
+          <ProjectImage src={project.image} alt={project.title} priority orderIndex={0} showOrderLabel={showImageOrderLabels} />
+          <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,0.08)_0%,rgba(0,0,0,0.12)_38%,rgba(0,0,0,0.68)_100%)]" />
+          <div className="absolute inset-x-0 bottom-0 z-10 px-6 pb-24 text-white sm:px-10 md:px-16 lg:px-20">
+            <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-white/70">{project.location}</p>
+            <h1 className="mt-4 max-w-[11ch] font-display text-[44px] font-extrabold uppercase leading-[0.9] tracking-[-0.055em] sm:text-[64px] md:text-[84px] lg:text-[108px]">
+              {project.title}
+            </h1>
+            <div className="mt-8 flex items-center gap-3 text-[10px] font-bold uppercase tracking-[0.18em] text-white/70">
+              <span className="h-px w-12 bg-white/70" />
+              Scroll for gallery
             </div>
-          </motion.div>
-
-          {/* Project Details */}
-          <div className="p-8 bg-white">
-            <div className="grid grid-cols-2 gap-y-8 gap-x-4">
-              {project.type && (
-                <div className="flex flex-col gap-1">
-                  <span className="text-[10px] uppercase tracking-widest text-[#8a867f]">Type</span>
-                  <span className="text-sm font-bold text-[#1a1a1a] uppercase">{project.type}</span>
-                </div>
-              )}
-              {project.status && (
-                <div className="flex flex-col gap-1">
-                  <span className="text-[10px] uppercase tracking-widest text-[#8a867f]">Status</span>
-                  <span className="text-sm font-bold text-[#1a1a1a] uppercase">{project.status}</span>
-                </div>
-              )}
-              {project.year && (
-                <div className="flex flex-col gap-1">
-                  <span className="text-[10px] uppercase tracking-widest text-[#8a867f]">Date</span>
-                  <span className="text-sm font-bold text-[#1a1a1a] uppercase">{project.year}</span>
-                </div>
-              )}
-              {project.client && (
-                <div className="flex flex-col gap-1">
-                  <span className="text-[10px] uppercase tracking-widest text-[#8a867f]">Client</span>
-                  <span className="text-sm font-bold text-[#1a1a1a] uppercase">{project.client}</span>
-                </div>
-              )}
-            </div>
-            
-            {project.description && (
-              <div className="mt-12 pt-12 border-t border-[#d9d4ca]">
-                <p className="text-base leading-relaxed text-[#383532]">
-                  {project.description}
-                </p>
-              </div>
-            )}
           </div>
+        </motion.section>
 
-          {/* Simple Gallery Stack */}
-          <div className="flex flex-col gap-4 px-4 bg-white">
-            {images.map((img, i) => (
-              <div key={i} className="relative aspect-video w-full rounded-sm overflow-hidden bg-[#f8f3ea]">
-                <ProjectImage src={img} alt={`${project.title} ${i}`} orderIndex={i} showOrderLabel={showImageOrderLabels} />
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Desktop Layout (Complex Grid) */}
-        <div className={cn(
-          "hidden md:flex min-h-screen w-full flex-col relative", 
-          layout === "H" ? "md:flex-row-reverse" : "md:flex-row"
-        )}>
-          {/* Left Info Section */}
-          <div className={cn(
-            "w-full md:w-[35%] p-8 md:p-16 flex flex-col gap-12 z-10 order-2 md:order-1 md:max-h-screen md:overflow-y-auto",
-            layout === "B" ? "justify-end" : "justify-between"
-          )}>
-            <div className="flex flex-col gap-2">
-              <h1 className={cn(
-                "text-4xl md:text-5xl font-bold uppercase tracking-tight text-[#1a1a1a]",
-                layout !== "H" && "md:text-end"
-              )}>
+        <section className="bg-white px-6 py-14 text-[#383532] sm:px-10 md:px-16 lg:px-20 lg:py-20">
+          <div className="mx-auto grid max-w-[1184px] gap-12 lg:grid-cols-[0.9fr_1.1fr] lg:gap-16">
+            <div>
+              <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-[#8a867f]">Project Detail</p>
+              <h2 className="mt-4 font-display text-[34px] font-bold uppercase leading-[0.96] tracking-[-0.04em] text-[#1a1a1a] md:text-[48px]">
                 {project.title}
-              </h1>
-              <h2 className={cn(
-                "text-xl md:text-2xl uppercase tracking-widest text-[#8a867f]",
-                layout !== "H" && "md:text-end"
-              )}>
-                {project.location}
               </h2>
-              <div className="w-full h-[1px] bg-[#d9d4ca] mt-4" />
             </div>
 
-            <div className={cn(
-              "grid grid-cols-1 gap-6 text-[11px] uppercase tracking-[0.2em]",
-              layout !== "H" && "md:text-end"
-            )}>
-              {project.type && (
-                <div className="flex flex-col gap-1">
-                  <span className="text-[#8a867f] font-medium">Project Type</span>
-                  <span className="text-[#383532] font-bold">{project.type}</span>
-                </div>
-              )}
-              {project.status && (
-                <div className="flex flex-col gap-1">
-                  <span className="text-[#8a867f] font-medium">Status</span>
-                  <span className="text-[#383532] font-bold">{project.status}</span>
-                </div>
-              )}
-              {project.year && (
-                <div className="flex flex-col gap-1">
-                  <span className="text-[#8a867f] font-medium">Date</span>
-                  <span className="text-[#383532] font-bold">{project.year}</span>
-                </div>
-              )}
-              {(project.architect || project.landscapeConsultant) && (
-                <div className="flex flex-col gap-1">
-                  <span className="text-[#8a867f] font-medium">
-                    {project.landscapeConsultant ? "Landscape Consultant" : "Architect"}
-                  </span>
-                  <span className="text-[#383532] font-bold">
-                    {project.landscapeConsultant || project.architect}
-                  </span>
-                </div>
-              )}
-              {project.client && (
-                <div className="flex flex-col gap-1">
-                  <span className="text-[#8a867f] font-medium">Client</span>
-                  <span className="text-[#383532] font-bold">{project.client}</span>
-                </div>
-              )}
-            </div>
+            <div className="space-y-10">
+              <div className="grid grid-cols-2 gap-x-6 gap-y-8 md:grid-cols-3">
+                {project.type ? (
+                  <div>
+                    <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#8a867f]">Project Type</p>
+                    <p className="mt-2 text-sm font-semibold uppercase text-[#383532]">{project.type}</p>
+                  </div>
+                ) : null}
+                {project.status ? (
+                  <div>
+                    <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#8a867f]">Status</p>
+                    <p className="mt-2 text-sm font-semibold uppercase text-[#383532]">{project.status}</p>
+                  </div>
+                ) : null}
+                {project.year ? (
+                  <div>
+                    <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#8a867f]">Date</p>
+                    <p className="mt-2 text-sm font-semibold uppercase text-[#383532]">{project.year}</p>
+                  </div>
+                ) : null}
+                {project.client ? (
+                  <div>
+                    <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#8a867f]">Client</p>
+                    <p className="mt-2 text-sm font-semibold uppercase text-[#383532]">{project.client}</p>
+                  </div>
+                ) : null}
+                {project.architect || project.landscapeConsultant ? (
+                  <div className="md:col-span-2">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#8a867f]">
+                      {project.landscapeConsultant ? "Landscape Consultant" : "Architect"}
+                    </p>
+                    <p className="mt-2 text-sm font-semibold uppercase text-[#383532]">
+                      {project.landscapeConsultant || project.architect}
+                    </p>
+                  </div>
+                ) : null}
+              </div>
 
-            {project.description && (
-              <div className={cn("border-t border-[#d9d4ca] pt-8", layout !== "H" && "md:text-end")}>
-                <p className="text-sm leading-7 normal-case tracking-normal text-[#383532]">
+              {project.description ? (
+                <p className="border-t border-[#d9d4ca] pt-8 text-base leading-8 text-[#5f5a52]">
                   {project.description}
                 </p>
-              </div>
-            )}
+              ) : null}
+            </div>
           </div>
+        </section>
 
-          {/* Right Gallery Section */}
-          <motion.div 
-            layoutId={`image-${project.slug}`}
-            className={`"w-full md:w-[65%] h-full min-h-screen bg-[#FDFBF7] order-1 md:order-2 flex items-center justify-center md:max-h-screen md:overflow-y-auto" ${layout === "H" ? "md:justify-end" :"md:justify-start"}`}
-          >
-             <ProjectGalleryTemplate layout={layout} images={images} showImageOrderLabels={showImageOrderLabels} />
-          </motion.div>
-        </div>
+        <section className="min-h-screen bg-[#f8f3ea] px-4 py-14 sm:px-8 md:px-12 lg:px-16 lg:py-20">
+          <div className="mx-auto max-w-[1280px]">
+            <div className="mb-8 flex items-end justify-between gap-6">
+              <div>
+                <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-[#8a867f]">Gallery</p>
+                <h2 className="mt-3 font-display text-[32px] font-bold uppercase leading-none tracking-[-0.04em] text-[#1a1a1a] md:text-[48px]">
+                  Project Collage
+                </h2>
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-4 md:hidden">
+              {images.map((img, i) => (
+                <div key={`${img}-${i}`} className="relative aspect-video w-full overflow-hidden rounded-sm bg-[#e8dfd2]">
+                  <ProjectImage src={img} alt={`${project.title} ${i + 1}`} orderIndex={i} showOrderLabel={showImageOrderLabels} />
+                </div>
+              ))}
+            </div>
+
+            <div className="hidden min-h-screen items-center justify-center md:flex">
+              <ProjectGalleryTemplate layout={layout} images={images} showImageOrderLabels={showImageOrderLabels} />
+            </div>
+          </div>
+        </section>
 
         {/* Bottom Footer Navigation (Shared for both, but positioned differently) */}
         <div className="fixed bottom-0 inset-x-0 z-[2010] flex justify-between items-center p-6 md:p-10 pointer-events-none">
           <button 
             onClick={onPrev}
-            className="pointer-events-auto flex items-center gap-2 group text-[11px] md:text-[13px] uppercase tracking-[0.2em] font-bold bg-white/80 md:bg-transparent backdrop-blur-sm md:backdrop-blur-0 px-4 py-2 md:p-0 rounded-full md:rounded-none shadow-md md:shadow-none"
+            className="pointer-events-auto flex items-center gap-2 group text-[11px] md:text-[13px] uppercase tracking-[0.2em] font-bold bg-white/85 backdrop-blur-sm px-4 py-2 rounded-full shadow-md"
           >
             <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
             <span>Prev</span>
           </button>
           <button 
             onClick={onNext}
-            className="pointer-events-auto flex items-center gap-2 group text-[11px] md:text-[13px] uppercase tracking-[0.2em] font-bold bg-white/80 md:bg-transparent backdrop-blur-sm md:backdrop-blur-0 px-4 py-2 md:p-0 rounded-full md:rounded-none shadow-md md:shadow-none"
+            className="pointer-events-auto flex items-center gap-2 group text-[11px] md:text-[13px] uppercase tracking-[0.2em] font-bold bg-white/85 backdrop-blur-sm px-4 py-2 rounded-full shadow-md"
           >
             <span>Next</span>
             <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />

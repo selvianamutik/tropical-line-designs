@@ -13,6 +13,8 @@ type SiteSettingsValues = {
   office_address: string;
   instagram_handle: string;
   linkedin_url: string;
+  footer_heading: string;
+  footer_description: string;
 };
 
 export function AdminSettingsForm({
@@ -98,6 +100,37 @@ export function AdminSettingsForm({
             defaultValue={values.linkedin_url}
             placeholder="https://www.linkedin.com/company/..."
           />
+        </div>
+
+        <div className="grid gap-8 border-t border-[#e9e6df] pt-8">
+          <div>
+            <h3 className="font-sans text-base font-bold text-[#383532]">Footer Copy</h3>
+            <p className="mt-1 text-sm text-[#a5a098]">Content shown in the global footer introduction.</p>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-[10px] font-bold tracking-[0.1em] text-[#8a867f] uppercase">Footer Heading</label>
+            <textarea
+              name="footer_heading"
+              required
+              defaultValue={values.footer_heading}
+              className={cn(
+                "flex min-h-[90px] w-full resize-y rounded-sm border border-[#d9d4ca] bg-transparent px-3 py-2 text-sm text-[#383532] transition-colors placeholder:text-[#a5a098] focus-visible:border-[#d97706] focus-visible:outline-none",
+              )}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-[10px] font-bold tracking-[0.1em] text-[#8a867f] uppercase">Footer Description</label>
+            <textarea
+              name="footer_description"
+              required
+              defaultValue={values.footer_description}
+              className={cn(
+                "flex min-h-[140px] w-full resize-y rounded-sm border border-[#d9d4ca] bg-transparent px-3 py-2 text-sm text-[#383532] transition-colors placeholder:text-[#a5a098] focus-visible:border-[#d97706] focus-visible:outline-none",
+              )}
+            />
+          </div>
         </div>
       </div>
 

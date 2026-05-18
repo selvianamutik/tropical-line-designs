@@ -10,12 +10,14 @@ import {
   Settings, 
   LogOut, 
   Users, 
-  Network
+  Network,
+  Briefcase
 } from "lucide-react";
 
 const sidebarLinks = [
   { name: "DASHBOARD", href: "/admin", icon: LayoutDashboard },
   { name: "PROJECT MANAGER", href: "/admin/projects", icon: Compass },
+  { name: "SERVICES", href: "/admin/services", icon: Briefcase },
   { name: "TEAM DIRECTORY", href: "/admin/team", icon: Users },
   { name: "COLLABORATOR NETWORK", href: "/admin/collaborators", icon: Network },
   { name: "AWARDS & RECOGNITION", href: "/admin/awards", icon: Award },

@@ -4,6 +4,7 @@ import type {
   DashboardMetrics,
   PortfolioGalleryItemRecord,
   PortfolioRecord,
+  ServiceRecord,
   SiteSettingsRecord,
   TeamMemberRecord,
 } from "@/lib/admin/types";
@@ -21,14 +22,35 @@ function withImagePublicUrl<T extends { image_bucket?: string | null; image_path
 
 export async function listPortfolios() {
   const supabase = await createClient();
-  const { data, error } = await supabase
+  const orderedQuery = await supabase
+    .from("portfolios")
+    .select("*")
+    .order("display_order", { ascending: true })
+    .order("commenced_at", { ascending: false, nullsFirst: false })
+    .order("created_at", { ascending: false });
+
+  if (!orderedQuery.error) {
+    return ((orderedQuery.data || []) as Partial<PortfolioRecord>[]).map((project) => ({
+      ...project,
+      display_order: project.display_order ?? 0,
+    } as PortfolioRecord)).map(withImagePublicUrl);
+  }
+
+  if (orderedQuery.error.code !== "42703" && orderedQuery.error.code !== "PGRST204") {
+    throw orderedQuery.error;
+  }
+
+  const fallbackQuery = await supabase
     .from("portfolios")
     .select("*")
     .order("commenced_at", { ascending: false, nullsFirst: false })
     .order("created_at", { ascending: false });
 
-  if (error) throw error;
-  return ((data || []) as PortfolioRecord[]).map(withImagePublicUrl);
+  if (fallbackQuery.error) throw fallbackQuery.error;
+  return ((fallbackQuery.data || []) as Partial<PortfolioRecord>[]).map((project) => ({
+    ...project,
+    display_order: project.display_order ?? 0,
+  } as PortfolioRecord)).map(withImagePublicUrl);
 }
 
 type RawPortfolioGalleryItemRow = {
@@ -117,6 +139,22 @@ export async function listAwards() {
 
   if (error) throw error;
   return ((data || []) as AwardRecord[]).map(withImagePublicUrl);
+}
+
+export async function listServices() {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("services")
+    .select("*")
+    .order("sort_order", { ascending: true })
+    .order("created_at", { ascending: true });
+
+  if (error?.code === "42P01" || error?.code === "PGRST205") {
+    return [];
+  }
+
+  if (error) throw error;
+  return (data || []) as ServiceRecord[];
 }
 
 export async function getSiteSettings() {

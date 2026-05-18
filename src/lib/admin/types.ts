@@ -20,6 +20,7 @@ export interface PortfolioRecord {
   architect: string | null;
   landscape_consultant: string | null;
   project_size: string | null;
+  display_order: number;
   description: string | null;
   gallery_layout: GalleryLayout;
   image_bucket: string;
@@ -84,6 +85,15 @@ export interface AwardRecord {
   created_at: string;
 }
 
+export interface ServiceRecord {
+  id: string;
+  title: string;
+  description: string | null;
+  sort_order: number;
+  is_active: boolean;
+  created_at: string;
+}
+
 export interface SiteSettingsRecord {
   id: string;
   studio_name: string;
@@ -92,6 +102,8 @@ export interface SiteSettingsRecord {
   office_address: string;
   instagram_handle: string | null;
   linkedin_url: string | null;
+  footer_heading: string | null;
+  footer_description: string | null;
   updated_at: string;
 }
 

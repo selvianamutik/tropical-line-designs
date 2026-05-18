@@ -38,6 +38,12 @@ const statusOptions = [
   { label: "On Hold", value: "On Hold" },
 ] as const;
 
+const projectTypeOptions = [
+  { label: "Build", value: "Build" },
+  { label: "Design", value: "Design" },
+  { label: "Design and Build", value: "Design and Build" },
+] as const;
+
 function formatProjectYear(commencedAt: string | null) {
   if (!commencedAt) {
     return "Undated";
@@ -124,6 +130,7 @@ export function AdminProjectsTable({ projects, portfolioGalleryItems }: AdminPro
           <TableHeader>
             <TableRow>
               <TableHead>Project Title</TableHead>
+              <TableHead>Order</TableHead>
               <TableHead>Location</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Commenced</TableHead>
@@ -142,6 +149,7 @@ export function AdminProjectsTable({ projects, portfolioGalleryItems }: AdminPro
               onClick={overlayIndex >= 0 ? () => setSelectedIndex(overlayIndex) : undefined}
             >
               <TableCell className="font-semibold">{project.title}</TableCell>
+              <TableCell className="text-[#6b6762]">{project.display_order ?? 0}</TableCell>
               <TableCell className="text-[#6b6762]">{project.location}</TableCell>
               <TableCell>
                 <span className="rounded-sm bg-[#f4efe6] px-2 py-1 text-[9px] font-bold uppercase tracking-[0.1em] text-[#8a867f]">
@@ -173,8 +181,15 @@ export function AdminProjectsTable({ projects, portfolioGalleryItems }: AdminPro
                         options: [...statusOptions],
                       },
                       { name: "commenced_at", label: "Commenced Date", type: "month", defaultValue: toMonthInputValue(project.commenced_at) },
+                      { name: "display_order", label: "Display Order", type: "number", min: 0, defaultValue: project.display_order ?? 0 },
                       { name: "client", label: "Client", defaultValue: project.client },
-                      { name: "category", label: "Category", defaultValue: project.category },
+                      {
+                        name: "category",
+                        label: "Project Type",
+                        type: "select",
+                        defaultValue: project.category ?? "Design",
+                        options: [...projectTypeOptions],
+                      },
                       { name: "architect", label: "Architect", defaultValue: project.architect },
                       { name: "landscape_consultant", label: "Landscape Consultant", defaultValue: project.landscape_consultant },
                       { name: "project_size", label: "Project Size", defaultValue: project.project_size },

@@ -44,6 +44,7 @@ create table if not exists public.portfolios (
   architect text,
   landscape_consultant text,
   project_size text,
+  display_order integer not null default 0,
   description text,
   image_url text,
   image_bucket text not null default 'site-media',
@@ -55,6 +56,8 @@ create table if not exists public.portfolios (
     check (status in ('Planning', 'Design', 'Construction', 'Completed', 'On Hold')),
   constraint portfolios_gallery_layout_check
     check (gallery_layout in ('A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J')),
+  constraint portfolios_display_order_check
+    check (display_order >= 0),
   constraint portfolios_image_bucket_check
     check (image_bucket = 'site-media'),
   constraint portfolios_image_path_check
@@ -164,6 +167,17 @@ create table if not exists public.awards (
   created_at timestamptz not null default timezone('utc', now())
 );
 
+create table if not exists public.services (
+  id uuid primary key default gen_random_uuid(),
+  title text not null,
+  description text,
+  sort_order integer not null default 0,
+  is_active boolean not null default true,
+  created_at timestamptz not null default timezone('utc', now()),
+  constraint services_sort_order_check
+    check (sort_order >= 0)
+);
+
 create table if not exists public.site_settings (
   id text primary key,
   studio_name text not null,
@@ -172,6 +186,8 @@ create table if not exists public.site_settings (
   office_address text not null,
   instagram_handle text,
   linkedin_url text,
+  footer_heading text,
+  footer_description text,
   updated_at timestamptz not null default timezone('utc', now())
 );
 
@@ -182,7 +198,9 @@ insert into public.site_settings (
   phone_number,
   office_address,
   instagram_handle,
-  linkedin_url
+  linkedin_url,
+  footer_heading,
+  footer_description
 )
 values (
   'default',
@@ -191,6 +209,8 @@ values (
   '+62 812 3456 7890',
   'Jl. Raya Seminyak No. 123, Kuta, Badung, Bali 80361, Indonesia',
   '@tropicallinedesign',
-  'https://www.linkedin.com'
+  'https://www.linkedin.com',
+  'Holistic tropical landscape design shaped for Bali and beyond.',
+  'As a landscape design company based in Bali, a tropical paradise in Indonesia, Tropical Line Design focuses on creating landscape designs with a natural and tropical ambiance combined with elegance to fulfill clients'' expectations.'
 )
 on conflict (id) do nothing;

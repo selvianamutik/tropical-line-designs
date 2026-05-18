@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 type ProjectFact = {
@@ -21,45 +21,13 @@ function truncateFactValue(value: string, maxWords = 4) {
   return `${words.slice(0, maxWords).join(" ")}`;
 }
 
-function useTypingText(text: string, speed = 26) {
-  const [displayedText, setDisplayedText] = useState("");
-
-  useEffect(() => {
-    let frameId: number | undefined;
-    let timeoutId: number | undefined;
-    let index = 0;
-
-    setDisplayedText("");
-
-    const typeNext = () => {
-      timeoutId = window.setTimeout(() => {
-        index += 1;
-        setDisplayedText(text.slice(0, index));
-
-        if (index < text.length) {
-          frameId = window.requestAnimationFrame(typeNext);
-        }
-      }, speed);
-    };
-
-    frameId = window.requestAnimationFrame(typeNext);
-
-    return () => {
-      if (frameId) {
-        window.cancelAnimationFrame(frameId);
-      }
-      if (timeoutId) {
-        window.clearTimeout(timeoutId);
-      }
-    };
-  }, [speed, text]);
-
-  return displayedText;
-}
+const fadeInProps = {
+  initial: { opacity: 0, y: 16 },
+  animate: { opacity: 1, y: 0 },
+  transition: { duration: 0.7, ease: "easeOut" },
+} as const;
 
 export function HeroContent({ title, facts, layout = "bottom-left" }: HeroContentProps) {
-  const typedTitle = useTypingText(title, 18);
-
   const containerStyles = {
     "bottom-left": "justify-end items-start",
     "center": "justify-center items-center text-center",
@@ -70,9 +38,9 @@ export function HeroContent({ title, facts, layout = "bottom-left" }: HeroConten
   if (layout === "center") {
     return (
       <div className={cn("relative z-10 flex h-screen flex-col px-5 pt-24 sm:px-6 md:px-8 lg:px-10 xl:px-12", containerStyles[layout])}>
-        <div className="max-w-4xl">
+        <motion.div {...fadeInProps} className="max-w-4xl">
           <h1 className="font-display text-[48px] font-extrabold leading-[0.92] tracking-[-0.055em] text-white sm:text-[64px] md:text-[80px] lg:text-[100px]">
-            {typedTitle}
+            {title}
           </h1>
           <div className="mt-12 flex justify-center gap-12">
               {facts.slice(0, 2).map(fact => (
@@ -82,7 +50,7 @@ export function HeroContent({ title, facts, layout = "bottom-left" }: HeroConten
                 </div>
               ))}
           </div>
-        </div>
+        </motion.div>
       </div>
     );
   }
@@ -90,9 +58,9 @@ export function HeroContent({ title, facts, layout = "bottom-left" }: HeroConten
   if (layout === "top-right") {
     return (
       <div className={cn("relative z-10 flex h-screen flex-col px-5 pt-24 sm:px-6 md:px-8 lg:px-10 xl:px-12", containerStyles[layout])}>
-        <div className="w-full max-w-2xl text-right">
+        <motion.div {...fadeInProps} className="w-full max-w-2xl text-right">
           <h1 className="font-display text-[48px] font-extrabold leading-[0.9] tracking-tighter text-white sm:text-[72px] lg:text-[96px]">
-            {typedTitle}
+            {title}
           </h1>
           <div className="mt-8 flex flex-col items-end gap-4">
             {facts.map(fact => (
@@ -102,7 +70,7 @@ export function HeroContent({ title, facts, layout = "bottom-left" }: HeroConten
               </div>
             ))}
           </div>
-        </div>
+        </motion.div>
       </div>
     );
   }
@@ -110,9 +78,9 @@ export function HeroContent({ title, facts, layout = "bottom-left" }: HeroConten
   if (layout === "split") {
     return (
       <div className="relative z-10 flex h-screen items-center px-5 pt-24 sm:px-6 md:px-8 lg:px-10 xl:px-12">
-        <div className="grid w-full grid-cols-1 lg:grid-cols-2 gap-20">
+        <motion.div {...fadeInProps} className="grid w-full grid-cols-1 lg:grid-cols-2 gap-20">
            <h1 className="font-display text-[56px] font-extrabold leading-[0.85] tracking-tight text-white sm:text-[80px] lg:text-[120px]">
-             {typedTitle}
+             {title}
            </h1>
            <div className="flex flex-col justify-center gap-12 lg:border-l lg:border-white/20 lg:pl-20">
               {facts.map(fact => (
@@ -122,7 +90,7 @@ export function HeroContent({ title, facts, layout = "bottom-left" }: HeroConten
                 </div>
               ))}
            </div>
-        </div>
+        </motion.div>
       </div>
     );
   }
@@ -130,10 +98,9 @@ export function HeroContent({ title, facts, layout = "bottom-left" }: HeroConten
   // Default: bottom-left
   return (
     <div className={cn("relative z-10 flex h-screen flex-col px-5 pb-8 pt-28 sm:px-6 sm:pb-10 md:px-8 md:pb-12 lg:px-10 lg:pb-14 xl:px-12 xl:pb-16", containerStyles[layout])}>
-      <div className="w-full">
+      <motion.div {...fadeInProps} className="w-full">
         <h1 className="max-w-[10ch] font-display text-[48px] font-extrabold leading-[0.92] tracking-[-0.055em] text-white sm:text-[64px] md:text-[76px] lg:text-[88px] xl:text-[96px]">
-          {typedTitle}
-          <span className="ml-[2px] inline-block h-[0.88em] w-[2px] animate-pulse bg-white align-[-0.08em]" />
+          {title}
         </h1>
 
         <div className="mt-8 flex flex-col gap-8 sm:mt-10 md:mt-12 lg:mt-16 lg:flex-row lg:items-end lg:justify-between xl:mt-24">
@@ -160,7 +127,7 @@ export function HeroContent({ title, facts, layout = "bottom-left" }: HeroConten
             </span>
           </Link>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 }

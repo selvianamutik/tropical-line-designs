@@ -106,9 +106,9 @@ export function IntroOverlay() {
                 <h1 className="text-5xl md:text-8xl font-light tracking-[-0.03em] text-white uppercase font-sans">
                   Tropical Line <span className="font-bold italic">Design</span>
                 </h1>
-                <p className="text-sm md:text-base text-white/50 tracking-[0.5em] uppercase font-inter">
+                {/* <p className="text-sm md:text-base text-white/50 tracking-[0.5em] uppercase font-inter">
                   Integrated Corporate Identity
-                </p>
+                </p> */}
               </motion.div>
 
               {/* Call to Action */}
