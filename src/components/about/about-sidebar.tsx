@@ -6,8 +6,8 @@ import { cn } from "@/lib/utils";
 
 const sidebarLinks = [
   { name: "Principal", href: "/about" },
-  { name: "People", href: "/about/people" },
   { name: "Services", href: "/about/services" },
+  { name: "People", href: "/about/people" },
   { name: "Collaborators", href: "/about/collaborators" },
   { name: "Awards", href: "/about/awards" },
 ];

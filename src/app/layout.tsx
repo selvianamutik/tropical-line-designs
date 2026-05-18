@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter, Manrope } from "next/font/google";
+import { IntroStorageReset } from "@/components/global/intro-storage-reset";
 import "./globals.css";
 
 const inter = Inter({
@@ -30,6 +31,7 @@ export default function RootLayout({
   return (
     <html lang="id">
       <body className={`${inter.variable} ${manrope.variable}`}>
+        <IntroStorageReset />
         {children}
       </body>
     </html>

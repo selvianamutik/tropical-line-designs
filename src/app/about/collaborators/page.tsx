@@ -1,5 +1,4 @@
 import Image from "next/image";
-import { collaboratorsData } from "@/data/about";
 import { listPublicCollaborators } from "@/lib/public/collaborators";
 
 export default async function AboutCollaboratorsPage() {
@@ -8,9 +7,6 @@ export default async function AboutCollaboratorsPage() {
   return (
     <div className="flex flex-col gap-12 pb-24">
       <h1 className="text-5xl md:text-6xl font-medium text-black">COLLABORATORS</h1>
-      <p className="max-w-2xl text-neutral-600 font-light text-lg leading-relaxed font-inter">
-        {collaboratorsData.description}
-      </p>
 
       <div className="mt-2 grid grid-cols-2 gap-4 border-y border-neutral-200 py-6 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
         {collaborators.map((collaborator) => (

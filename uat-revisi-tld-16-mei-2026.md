@@ -232,7 +232,26 @@ Ekspektasi:
 
 - `Next` berpindah ke project berikutnya.
 - `Prev` berpindah ke project sebelumnya.
+- Setelah klik `Next` atau `Prev`, tampilan overlay otomatis kembali ke bagian paling atas/image besar project baru.
 - Tombol close menutup overlay dan kembali ke grid project.
+
+Status: `___`
+
+### UAT-13A - Overlay Auto Scroll ke Atas Saat Next/Prev dari Posisi Bawah
+
+Langkah:
+
+1. Buka `/projects`.
+2. Klik salah satu project.
+3. Scroll overlay sampai bagian detail atau `Project Collage`.
+4. Klik `Next`.
+5. Ulangi dari posisi bawah, lalu klik `Prev`.
+
+Ekspektasi:
+
+- Setelah klik `Next`, project berubah dan overlay kembali ke bagian image besar paling atas.
+- Setelah klik `Prev`, project berubah dan overlay kembali ke bagian image besar paling atas.
+- User tidak tertinggal di posisi scroll bawah dari project sebelumnya.
 
 Status: `___`
 
@@ -540,6 +559,24 @@ Ekspektasi:
 
 Status: `___`
 
+### UAT-31A - Status Intro Direset Saat Pindah ke Halaman Lain
+
+Langkah:
+
+1. Buka homepage `/`.
+2. Klik intro untuk masuk ke website.
+3. Pastikan localStorage memiliki key `has-seen-intro-v1`.
+4. Pindah ke halaman lain, misalnya `/projects` atau `/about`.
+5. Cek localStorage.
+6. Kembali ke homepage `/`.
+
+Ekspektasi:
+
+- Saat berada di halaman selain `/`, key `has-seen-intro-v1` terhapus dari localStorage.
+- Saat kembali ke homepage, intro dapat tampil kembali.
+
+Status: `___`
+
 ### UAT-32 - Video Intro Responsif di Mobile
 
 Langkah:
@@ -622,6 +659,49 @@ Ekspektasi:
 - Footer tampil di kedua halaman.
 - Link `Principal` dan `Services` tersedia di Quick Links.
 - Contact dan social link tetap tampil.
+
+Status: `___`
+
+## 11. Build Production untuk Vercel
+
+### UAT-37 - Build Production Berhasil
+
+Langkah:
+
+1. Jalankan build production sesuai command deployment project.
+2. Untuk environment lokal saat ini dapat menggunakan:
+
+```bash
+node node_modules/next/dist/bin/next build
+```
+
+Ekspektasi:
+
+- Build selesai dengan status sukses.
+- Tidak ada error compile.
+- Semua route utama berhasil masuk output build, termasuk:
+  - `/`
+  - `/projects`
+  - `/about`
+  - `/about/services`
+  - `/admin/projects`
+  - `/admin/services`
+  - `/admin/settings`
+
+Status: `___`
+
+### UAT-38 - Build Tidak Terblokir Warning
+
+Langkah:
+
+1. Jalankan build production.
+2. Amati output lint/build.
+
+Ekspektasi:
+
+- Warning boleh muncul selama tidak menggagalkan build.
+- Tidak ada error yang menyebabkan build berhenti.
+- Build dapat dilanjutkan untuk deployment Vercel.
 
 Status: `___`
 

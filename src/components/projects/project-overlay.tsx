@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { X, ArrowLeft, ArrowRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { PublicProjectRecord, GalleryLayout } from "@/lib/public/projects";
@@ -63,6 +63,8 @@ export function ProjectOverlay({
   onPrev,
   showImageOrderLabels = false,
 }: ProjectOverlayProps) {
+  const scrollContainerRef = useRef<HTMLDivElement | null>(null);
+
   useEffect(() => {
     if (!isOpen) return;
 
@@ -74,6 +76,11 @@ export function ProjectOverlay({
     };
   }, [isOpen]);
 
+  useEffect(() => {
+    if (!isOpen) return;
+    scrollContainerRef.current?.scrollTo({ top: 0, left: 0, behavior: "auto" });
+  }, [isOpen, project.slug]);
+
   if (!isOpen) return null;
 
   const images = project.images || [project.image];
@@ -82,6 +89,7 @@ export function ProjectOverlay({
   return (
     <AnimatePresence>
       <motion.div
+        ref={scrollContainerRef}
         layoutId={`container-${project.slug}`}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
