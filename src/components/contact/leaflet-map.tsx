@@ -13,8 +13,7 @@ L.Icon.Default.mergeOptions({
 });
 
 export default function LeafletMap() {
-  // Koordinat Jl. Badak Agung, Denpasar (Dummy)
-  const position: L.LatLngExpression = [-8.6631, 115.2280];
+  const position: L.LatLngExpression = [-8.664550207456498, 115.23043976871178];
 
   return (
     <div className="w-full h-full rounded-md shadow-xl overflow-hidden bg-slate-100 z-10 relative">
