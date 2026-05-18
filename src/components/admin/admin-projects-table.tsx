@@ -1,12 +1,15 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { deletePortfolio, upsertPortfolio } from "@/app/admin/actions";
+import { useEffect, useMemo, useState, useTransition } from "react";
+import { GripVertical, Save } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { deletePortfolio, updatePortfolioDisplayOrder, upsertPortfolio } from "@/app/admin/actions";
 import { DeleteResourceForm } from "@/components/admin/delete-resource-form";
-import { PaginatedTable } from "@/components/admin/paginated-table";
 import { ProjectGalleryDialog } from "@/components/admin/project-gallery-dialog";
 import { ResourceFormDialog } from "@/components/admin/resource-form-dialog";
-import { TableCell, TableHead, TableHeader, TableRow } from "@/components/admin/ui/Table";
+import { useAdminToast } from "@/components/admin/admin-toast";
+import { Button } from "@/components/admin/ui/Button";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/admin/ui/Table";
 import { ProjectOverlay } from "@/components/projects/project-overlay";
 import { formatMonthYear, toMonthInputValue } from "@/lib/admin/format";
 import type { PortfolioGalleryItemRecord, PortfolioRecord } from "@/lib/admin/types";
@@ -70,8 +73,33 @@ function fallbackProjectImage(slug: string) {
   return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
 }
 
+function moveProject(items: PortfolioRecord[], fromId: string, toId: string) {
+  const nextItems = [...items];
+  const fromIndex = nextItems.findIndex((item) => item.id === fromId);
+  const toIndex = nextItems.findIndex((item) => item.id === toId);
+
+  if (fromIndex < 0 || toIndex < 0 || fromIndex === toIndex) {
+    return items;
+  }
+
+  const [moved] = nextItems.splice(fromIndex, 1);
+  nextItems.splice(toIndex, 0, moved);
+  return nextItems;
+}
+
 export function AdminProjectsTable({ projects, portfolioGalleryItems }: AdminProjectsTableProps) {
+  const router = useRouter();
+  const { showToast } = useAdminToast();
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+  const [orderedProjects, setOrderedProjects] = useState(projects);
+  const [draggedProjectId, setDraggedProjectId] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
+
+  useEffect(() => {
+    setOrderedProjects(projects);
+  }, [projects]);
+
+  const hasOrderChanges = orderedProjects.some((project, index) => project.id !== projects[index]?.id);
 
   const portfolioGalleryItemsByPortfolioId = useMemo(() => {
     const grouped = new Map<string, PortfolioGalleryItemRecord[]>();
@@ -85,7 +113,7 @@ export function AdminProjectsTable({ projects, portfolioGalleryItems }: AdminPro
 
   const overlayEntries = useMemo<PublicProjectRecord[]>(
     () =>
-      projects.map((project) => {
+      orderedProjects.map((project) => {
         const coverImage = project.image_public_url || fallbackProjectImage(project.slug);
         const galleryImages = (portfolioGalleryItemsByPortfolioId.get(project.id) ?? []).map(
           (item) => item.media_asset_url,
@@ -108,7 +136,7 @@ export function AdminProjectsTable({ projects, portfolioGalleryItems }: AdminPro
           description: project.description ?? undefined,
         };
       }),
-    [portfolioGalleryItemsByPortfolioId, projects],
+    [portfolioGalleryItemsByPortfolioId, orderedProjects],
   );
 
   const selectedProject = selectedIndex !== null ? overlayEntries[selectedIndex] : null;
@@ -123,12 +151,60 @@ export function AdminProjectsTable({ projects, portfolioGalleryItems }: AdminPro
     setSelectedIndex((selectedIndex - 1 + overlayEntries.length) % overlayEntries.length);
   };
 
+  const handleSaveProjectOrder = () => {
+    const formData = new FormData();
+    formData.set("ordered_project_ids", JSON.stringify(orderedProjects.map((project) => project.id)));
+
+    startTransition(async () => {
+      try {
+        await updatePortfolioDisplayOrder(formData);
+        showToast({
+          tone: "success",
+          title: "Urutan project berhasil disimpan.",
+        });
+        router.refresh();
+      } catch (error) {
+        showToast({
+          tone: "error",
+          title: "Gagal menyimpan urutan project.",
+          description: error instanceof Error ? error.message : "Terjadi kesalahan saat menyimpan urutan project.",
+        });
+      }
+    });
+  };
+
   return (
     <>
-      <PaginatedTable
-        headers={
+      <div className="space-y-4">
+        <div className="flex flex-col gap-3 rounded-sm border border-[#e9e6df] bg-white px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#8a867f]">Project Order</p>
+            <p className="mt-1 text-sm text-[#6b6762]">Drag baris project untuk mengubah urutan tampil di halaman publik.</p>
+          </div>
+          <div className="flex gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              disabled={!hasOrderChanges || isPending}
+              onClick={() => setOrderedProjects(projects)}
+            >
+              Reset Order
+            </Button>
+            <Button
+              type="button"
+              disabled={!hasOrderChanges || isPending}
+              onClick={handleSaveProjectOrder}
+            >
+              <Save className="mr-2 h-4 w-4" />
+              {isPending ? "Saving..." : "Save Project Order"}
+            </Button>
+          </div>
+        </div>
+
+        <Table>
           <TableHeader>
             <TableRow>
+              <TableHead className="w-[72px]">Move</TableHead>
               <TableHead>Project Title</TableHead>
               <TableHead>Order</TableHead>
               <TableHead>Location</TableHead>
@@ -137,19 +213,36 @@ export function AdminProjectsTable({ projects, portfolioGalleryItems }: AdminPro
               <TableHead className="w-[120px] text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
-        }
-      >
-        {projects.map((project) => {
+          <TableBody>
+        {orderedProjects.map((project, index) => {
           const overlayIndex = overlayEntries.findIndex((entry) => entry.slug === project.slug);
 
           return (
             <TableRow
               key={project.id}
+              draggable
+              onDragStart={() => setDraggedProjectId(project.id)}
+              onDragEnd={() => setDraggedProjectId(null)}
+              onDragOver={(event) => event.preventDefault()}
+              onDrop={(event) => {
+                event.preventDefault();
+                if (!draggedProjectId || draggedProjectId === project.id) return;
+                setOrderedProjects((current) => moveProject(current, draggedProjectId, project.id));
+                setDraggedProjectId(null);
+              }}
               className={overlayIndex >= 0 ? "cursor-pointer transition-colors hover:bg-[#f4efe6]" : undefined}
               onClick={overlayIndex >= 0 ? () => setSelectedIndex(overlayIndex) : undefined}
             >
+              <TableCell>
+                <div className="flex items-center gap-3 text-[#8a867f]">
+                  <GripVertical className="h-4 w-4 cursor-grab" />
+                  <span className="text-[11px] font-bold uppercase tracking-[0.12em]">
+                    {String(index + 1).padStart(2, "0")}
+                  </span>
+                </div>
+              </TableCell>
               <TableCell className="font-semibold">{project.title}</TableCell>
-              <TableCell className="text-[#6b6762]">{project.display_order ?? 0}</TableCell>
+              <TableCell className="text-[#6b6762]">{index}</TableCell>
               <TableCell className="text-[#6b6762]">{project.location}</TableCell>
               <TableCell>
                 <span className="rounded-sm bg-[#f4efe6] px-2 py-1 text-[9px] font-bold uppercase tracking-[0.1em] text-[#8a867f]">
@@ -220,7 +313,9 @@ export function AdminProjectsTable({ projects, portfolioGalleryItems }: AdminPro
             </TableRow>
           );
         })}
-      </PaginatedTable>
+          </TableBody>
+        </Table>
+      </div>
 
       {selectedProject ? (
         <ProjectOverlay

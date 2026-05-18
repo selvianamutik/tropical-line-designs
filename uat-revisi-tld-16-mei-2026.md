@@ -331,18 +331,33 @@ Langkah:
 
 1. Buka `/admin/projects`.
 2. Pilih satu project yang mudah dikenali.
-3. Edit `Display Order` menjadi angka lebih kecil dari project lain, misalnya `0`.
-4. Simpan.
+3. Drag baris project tersebut ke posisi urutan yang diinginkan.
+4. Klik `Save Project Order`.
 5. Buka `/projects`.
 
 Ekspektasi:
 
-- Project yang diedit naik sesuai urutan `Display Order`.
+- Project yang dipindahkan naik/turun sesuai posisi drag-and-drop.
 - Urutan project publik mengikuti angka `Display Order` dari kecil ke besar.
 
 Status: `___`
 
-### UAT-20 - Display Order Tidak Boleh Negatif
+### UAT-20 - Reset Order Mengembalikan Perubahan Drag sebelum Disimpan
+
+Langkah:
+
+1. Buka `/admin/projects`.
+2. Drag salah satu project ke posisi lain.
+3. Klik `Reset Order` sebelum klik save.
+
+Ekspektasi:
+
+- Urutan table kembali seperti sebelum drag.
+- Tombol save kembali disabled jika tidak ada perubahan.
+
+Status: `___`
+
+### UAT-21 - Display Order Tidak Boleh Negatif
 
 Langkah:
 
@@ -359,7 +374,7 @@ Status: `___`
 
 ## 8. Services Public dan Admin
 
-### UAT-21 - Menu Services Tampil di About Sidebar
+### UAT-22 - Menu Services Tampil di About Sidebar
 
 Langkah:
 
@@ -373,7 +388,7 @@ Ekspektasi:
 
 Status: `___`
 
-### UAT-22 - Halaman Public Services Tampil
+### UAT-23 - Halaman Public Services Tampil
 
 Langkah:
 
@@ -388,7 +403,7 @@ Ekspektasi:
 
 Status: `___`
 
-### UAT-23 - Menu Services Tampil di Admin Sidebar
+### UAT-24 - Menu Services Tampil di Admin Sidebar
 
 Langkah:
 
@@ -402,7 +417,7 @@ Ekspektasi:
 
 Status: `___`
 
-### UAT-24 - Tambah Service Baru dari Admin
+### UAT-25 - Tambah Service Baru dari Admin
 
 Langkah:
 
@@ -424,7 +439,7 @@ Ekspektasi:
 
 Status: `___`
 
-### UAT-25 - Edit Service dari Admin
+### UAT-26 - Edit Service dari Admin
 
 Langkah:
 
@@ -441,7 +456,7 @@ Ekspektasi:
 
 Status: `___`
 
-### UAT-26 - Hide Service dari Public Page
+### UAT-27 - Hide Service dari Public Page
 
 Langkah:
 
@@ -458,7 +473,7 @@ Ekspektasi:
 
 Status: `___`
 
-### UAT-27 - Delete Service dari Admin
+### UAT-28 - Delete Service dari Admin
 
 Langkah:
 
@@ -476,7 +491,7 @@ Status: `___`
 
 ## 9. Revisi Video Intro Client
 
-### UAT-28 - Video Intro Menggunakan File yang Diinginkan Client
+### UAT-29 - Video Intro Menggunakan File yang Diinginkan Client
 
 Langkah:
 
@@ -492,7 +507,7 @@ Ekspektasi:
 
 Status: `___`
 
-### UAT-29 - Video Intro Dapat Diputar Tanpa Error
+### UAT-30 - Video Intro Dapat Diputar Tanpa Error
 
 Langkah:
 
@@ -509,7 +524,7 @@ Ekspektasi:
 
 Status: `___`
 
-### UAT-30 - User Tetap Bisa Masuk ke Website Setelah Video
+### UAT-31 - User Tetap Bisa Masuk ke Website Setelah Video
 
 Langkah:
 
@@ -525,7 +540,7 @@ Ekspektasi:
 
 Status: `___`
 
-### UAT-31 - Video Intro Responsif di Mobile
+### UAT-32 - Video Intro Responsif di Mobile
 
 Langkah:
 
@@ -543,7 +558,7 @@ Status: `___`
 
 ## 10. Regression Ringan untuk Fitur yang Tersentuh
 
-### UAT-32 - Halaman Projects Tetap Bisa Dibuka
+### UAT-33 - Halaman Projects Tetap Bisa Dibuka
 
 Langkah:
 
@@ -557,7 +572,7 @@ Ekspektasi:
 
 Status: `___`
 
-### UAT-33 - Halaman About Utama Tetap Bisa Dibuka
+### UAT-34 - Halaman About Utama Tetap Bisa Dibuka
 
 Langkah:
 
@@ -575,7 +590,25 @@ Ekspektasi:
 
 Status: `___`
 
-### UAT-34 - Footer Tetap Tampil di Halaman Publik
+### UAT-35 - Sidebar Admin Tetap Setinggi Layar Saat Scroll
+
+Langkah:
+
+1. Login ke `/admin`.
+2. Buka halaman admin yang kontennya panjang, misalnya `/admin/projects` atau `/admin/services`.
+3. Scroll area konten utama ke bawah.
+4. Amati sidebar admin di sisi kiri.
+
+Ekspektasi:
+
+- Sidebar admin hanya setinggi layar viewport.
+- Sidebar tidak memanjang mengikuti tinggi konten.
+- Sidebar tetap berada di posisi yang sama saat konten utama discroll.
+- Yang bergerak hanya area konten utama di sisi kanan.
+
+Status: `___`
+
+### UAT-36 - Footer Tetap Tampil di Halaman Publik
 
 Langkah:
 

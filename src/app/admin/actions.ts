@@ -281,6 +281,51 @@ export async function deletePortfolio(formData: FormData) {
   revalidatePublicProjectPaths();
 }
 
+export async function updatePortfolioDisplayOrder(formData: FormData) {
+  const { supabase } = await requireAdmin();
+  const orderedProjectIdsRaw = requiredText(formData, "ordered_project_ids", { maxLength: 10000 });
+
+  let orderedProjectIds: string[];
+  try {
+    const parsed = JSON.parse(orderedProjectIdsRaw);
+    if (!Array.isArray(parsed) || parsed.some((item) => typeof item !== "string" || item.length === 0)) {
+      throw new Error("Invalid project order payload.");
+    }
+    orderedProjectIds = parsed;
+  } catch {
+    throw new Error("Invalid project order payload.");
+  }
+
+  const { data: existingProjects, error: existingError } = await supabase
+    .from("portfolios")
+    .select("id");
+
+  if (existingError) {
+    throw existingError;
+  }
+
+  const existingIds = new Set((existingProjects ?? []).map((project) => project.id as string));
+  if (existingIds.size !== orderedProjectIds.length || orderedProjectIds.some((id) => !existingIds.has(id))) {
+    throw new Error("Project order does not match the current portfolio list.");
+  }
+
+  for (const [index, projectId] of orderedProjectIds.entries()) {
+    const { error } = await supabase
+      .from("portfolios")
+      .update({ display_order: index })
+      .eq("id", projectId);
+
+    if (error) {
+      throw error;
+    }
+  }
+
+  revalidatePath("/");
+  revalidatePath("/projects");
+  revalidatePath("/admin");
+  revalidatePath("/admin/projects");
+}
+
 export async function updatePortfolioGalleryOrder(formData: FormData) {
   const { supabase } = await requireAdmin();
   const portfolioId = requiredText(formData, "portfolio_id", { maxLength: 64 });

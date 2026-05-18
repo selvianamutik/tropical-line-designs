@@ -12,10 +12,10 @@ export default async function AdminLayout({
   const { user } = await requireAdmin();
 
   return (
-    <div className="min-h-screen bg-[#FDFBF7] flex font-sans text-[#383532]">
+    <div className="flex h-screen overflow-hidden bg-[#FDFBF7] font-sans text-[#383532]">
       <AdminSidebar />
       
-      <div className="flex-1 flex flex-col">
+      <div className="flex min-w-0 flex-1 flex-col">
         {/* TOP BAR */}
         <header className="h-24 px-12 flex items-center justify-between border-b border-transparent">
           <h1 className="font-semibold text-xs tracking-[0.2em] uppercase text-[#383532]">
@@ -36,7 +36,7 @@ export default async function AdminLayout({
         </header>
 
         {/* MAIN CONTENT AREA */}
-        <main className="flex-1 overflow-auto">
+        <main className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden">
           <AdminToastProvider>{children}</AdminToastProvider>
         </main>
       </div>

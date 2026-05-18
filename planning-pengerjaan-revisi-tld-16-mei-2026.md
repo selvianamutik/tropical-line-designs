@@ -201,6 +201,7 @@ Catatan selesai:
 - Public projects sekarang mengurutkan berdasarkan `display_order` saat kolom tersedia, dengan fallback ke urutan lama jika migration belum aktif.
 - Admin project list sekarang menampilkan kolom `Order`.
 - Admin create/edit project sekarang punya input `Display Order`.
+- Admin project list sekarang mendukung drag-and-drop baris project dan tombol `Save Project Order`.
 - Server action `upsertPortfolio` sudah menyimpan `display_order` dan punya fallback jika kolom belum aktif.
 - Verifikasi TypeScript berhasil dengan `tsc --noEmit --incremental false`.
 

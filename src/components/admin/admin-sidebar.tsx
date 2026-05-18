@@ -28,8 +28,8 @@ export function AdminSidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="w-64 min-h-screen bg-[#FDFBF7] border-r border-[#e9e6df] flex flex-col justify-between py-10">
-      <div>
+    <aside className="flex h-screen w-64 shrink-0 flex-col justify-between overflow-hidden border-r border-[#e9e6df] bg-[#FDFBF7] py-10">
+      <div className="min-h-0 overflow-y-auto">
         {/* LOGO */}
         <div className="px-10 mb-16">
           <Link href="/admin" className="flex flex-col gap-1">
