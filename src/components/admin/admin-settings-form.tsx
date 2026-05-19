@@ -1,6 +1,8 @@
 "use client";
 
+import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { useAdminToast } from "@/components/admin/admin-toast";
 import { Button } from "@/components/admin/ui/Button";
 import { Input } from "@/components/admin/ui/Input";
@@ -15,7 +17,75 @@ type SiteSettingsValues = {
   linkedin_url: string;
   footer_heading: string;
   footer_description: string;
+  about_principal_image_url: string | null;
+  contact_image_url: string | null;
 };
+
+function shouldUseUnoptimizedImage(src: string) {
+  return src.startsWith("blob:")
+    || src.startsWith("data:")
+    || src.includes("/storage/v1/object/public/");
+}
+
+function SettingsImageField({
+  name,
+  label,
+  currentMediaUrl,
+  helpText,
+}: {
+  name: string;
+  label: string;
+  currentMediaUrl?: string | null;
+  helpText: string;
+}) {
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const imageUrl = previewUrl ?? currentMediaUrl ?? null;
+
+  useEffect(() => {
+    return () => {
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+      }
+    };
+  }, [previewUrl]);
+
+  return (
+    <div className="space-y-2">
+      <label className="text-[10px] font-bold tracking-[0.1em] text-[#8a867f] uppercase">{label}</label>
+      <Input
+        name={name}
+        type="file"
+        accept="image/jpeg,image/png,image/webp,image/avif"
+        onChange={(event) => {
+          const file = event.target.files?.[0];
+          setPreviewUrl(file ? URL.createObjectURL(file) : null);
+        }}
+      />
+      {imageUrl ? (
+        <div className="flex items-center gap-4 rounded-sm border border-[#eadfcd] bg-[#fbf7f0] p-3">
+          <div className="relative h-24 w-32 overflow-hidden rounded-[2px] bg-[#efe7dc]">
+            <Image
+              src={imageUrl}
+              alt={`${label} preview`}
+              fill
+              sizes="128px"
+              className="object-cover"
+              unoptimized={shouldUseUnoptimizedImage(imageUrl)}
+            />
+          </div>
+          <div className="min-w-0">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#8a867f]">
+              {previewUrl ? "Selected image" : "Current image"}
+            </p>
+            <p className="mt-1 text-sm text-[#6b6762]">{helpText}</p>
+          </div>
+        </div>
+      ) : (
+        <p className="text-[11px] text-[#8a867f]">{helpText}</p>
+      )}
+    </div>
+  );
+}
 
 export function AdminSettingsForm({
   action,
@@ -100,6 +170,38 @@ export function AdminSettingsForm({
             defaultValue={values.linkedin_url}
             placeholder="https://www.linkedin.com/company/..."
           />
+        </div>
+
+        <div className="grid gap-8 border-t border-[#e9e6df] pt-8 md:grid-cols-2">
+          <div>
+            <h3 className="font-sans text-base font-bold text-[#383532]">Page Images</h3>
+            <p className="mt-1 text-sm text-[#a5a098]">
+              Images shown on the About Principal area and Contact page.
+            </p>
+          </div>
+
+          <div className="grid gap-6">
+            <SettingsImageField
+              name="about_principal_image_file"
+              label="Principal Page Top Image"
+              currentMediaUrl={values.about_principal_image_url}
+              helpText={
+                values.about_principal_image_url
+                  ? "Leave empty to keep the current top image on the Principal page."
+                  : "Leave empty to use the default top image on the Principal page."
+              }
+            />
+            <SettingsImageField
+              name="contact_image_file"
+              label="Contact Page Image"
+              currentMediaUrl={values.contact_image_url}
+              helpText={
+                values.contact_image_url
+                  ? "Leave empty to keep the current Contact page image."
+                  : "Leave empty to use the default contact image."
+              }
+            />
+          </div>
         </div>
 
         <div className="grid gap-8 border-t border-[#e9e6df] pt-8">

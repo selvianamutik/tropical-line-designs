@@ -91,6 +91,16 @@ export interface ServiceRecord {
   description: string | null;
   sort_order: number;
   is_active: boolean;
+  image_1_bucket?: string | null;
+  image_1_path?: string | null;
+  image_1_mime_type?: string | null;
+  image_1_size_bytes?: number | null;
+  image_1_public_url?: string | null;
+  image_2_bucket?: string | null;
+  image_2_path?: string | null;
+  image_2_mime_type?: string | null;
+  image_2_size_bytes?: number | null;
+  image_2_public_url?: string | null;
   created_at: string;
 }
 
@@ -104,6 +114,16 @@ export interface SiteSettingsRecord {
   linkedin_url: string | null;
   footer_heading: string | null;
   footer_description: string | null;
+  about_principal_image_bucket?: string | null;
+  about_principal_image_path?: string | null;
+  about_principal_image_mime_type?: string | null;
+  about_principal_image_size_bytes?: number | null;
+  about_principal_image_public_url?: string | null;
+  contact_image_bucket?: string | null;
+  contact_image_path?: string | null;
+  contact_image_mime_type?: string | null;
+  contact_image_size_bytes?: number | null;
+  contact_image_public_url?: string | null;
   updated_at: string;
 }
 

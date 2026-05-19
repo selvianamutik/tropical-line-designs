@@ -5,7 +5,14 @@ const MEDIA_BUCKET = "site-media";
 const MAX_IMAGE_SIZE_BYTES = 10 * 1024 * 1024;
 const ALLOWED_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp", "image/avif"]);
 
-type MediaOwner = "portfolios" | "team_members" | "collaborators" | "awards" | "portfolio_gallery";
+type MediaOwner =
+  | "portfolios"
+  | "team_members"
+  | "collaborators"
+  | "awards"
+  | "portfolio_gallery"
+  | "services"
+  | "site_settings";
 
 type StoredImage = {
   image_bucket: string;

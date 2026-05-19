@@ -2,10 +2,13 @@
 
 import Image from "next/image";
 import { useState } from "react";
+import { cn } from "@/lib/utils";
 
 type TeamMemberPortraitProps = {
   src: string;
   alt: string;
+  className?: string;
+  sizes?: string;
 };
 
 function createFallbackPortrait(name: string) {
@@ -21,7 +24,12 @@ function createFallbackPortrait(name: string) {
   return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
 }
 
-export function TeamMemberPortrait({ src, alt }: TeamMemberPortraitProps) {
+export function TeamMemberPortrait({
+  src,
+  alt,
+  className,
+  sizes = "(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw",
+}: TeamMemberPortraitProps) {
   const fallbackSrc = createFallbackPortrait(alt);
   const [imageSrc, setImageSrc] = useState(src || fallbackSrc);
 
@@ -30,8 +38,11 @@ export function TeamMemberPortrait({ src, alt }: TeamMemberPortraitProps) {
       src={imageSrc}
       alt={alt}
       fill
-      className="object-cover rounded-sm grayscale transition-all duration-300 hover:grayscale-0"
-      sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+      className={cn(
+        "object-cover rounded-sm grayscale transition-all duration-300 hover:grayscale-0",
+        className,
+      )}
+      sizes={sizes}
       unoptimized={imageSrc.startsWith("data:") || imageSrc.includes("/storage/v1/object/public/")}
       onError={() => {
         if (imageSrc !== fallbackSrc) {

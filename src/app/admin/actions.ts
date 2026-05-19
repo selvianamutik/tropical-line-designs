@@ -31,6 +31,7 @@ function revalidatePublicProjectPaths() {
 
 function revalidatePublicAboutPaths() {
   revalidatePath("/about");
+  revalidatePath("/about/services");
   revalidatePath("/about/people");
   revalidatePath("/about/collaborators");
   revalidatePath("/about/awards");
@@ -776,10 +777,139 @@ function requiredBooleanValue(formData: FormData, key: string) {
   return value === "true";
 }
 
+type ServiceImageColumns = {
+  image_1_bucket: string;
+  image_1_path: string | null;
+  image_1_mime_type: string | null;
+  image_1_size_bytes: number | null;
+  image_2_bucket: string;
+  image_2_path: string | null;
+  image_2_mime_type: string | null;
+  image_2_size_bytes: number | null;
+};
+
+function emptyServiceImageColumns(): ServiceImageColumns {
+  const image = emptyImageColumns();
+  return {
+    image_1_bucket: image.image_bucket,
+    image_1_path: image.image_path,
+    image_1_mime_type: image.image_mime_type,
+    image_1_size_bytes: image.image_size_bytes,
+    image_2_bucket: image.image_bucket,
+    image_2_path: image.image_path,
+    image_2_mime_type: image.image_mime_type,
+    image_2_size_bytes: image.image_size_bytes,
+  };
+}
+
+function mapServiceImageColumns(
+  slot: 1 | 2,
+  image: Awaited<ReturnType<typeof uploadEntityImage>>,
+): Partial<ServiceImageColumns> {
+  if (slot === 1) {
+    return {
+      image_1_bucket: image.image_bucket,
+      image_1_path: image.image_path,
+      image_1_mime_type: image.image_mime_type,
+      image_1_size_bytes: image.image_size_bytes,
+    };
+  }
+
+  return {
+    image_2_bucket: image.image_bucket,
+    image_2_path: image.image_path,
+    image_2_mime_type: image.image_mime_type,
+    image_2_size_bytes: image.image_size_bytes,
+  };
+}
+
+function isMissingServiceImageColumnError(error: { code?: string } | null | undefined) {
+  return error?.code === "42703" || error?.code === "PGRST204";
+}
+
+function assertServiceImageColumnsAvailable(error: { code?: string } | null | undefined) {
+  if (isMissingServiceImageColumnError(error)) {
+    throw new Error("Kolom gambar services belum tersedia. Jalankan migration supabase/migrations/20260520_services_images.sql terlebih dahulu.");
+  }
+}
+
+function isStorageObjectPath(path: string | null | undefined) {
+  return Boolean(path && !path.startsWith("/") && !/^https?:\/\//.test(path));
+}
+
+type SiteSettingsImageColumns = {
+  about_principal_image_bucket: string;
+  about_principal_image_path: string | null;
+  about_principal_image_mime_type: string | null;
+  about_principal_image_size_bytes: number | null;
+  contact_image_bucket: string;
+  contact_image_path: string | null;
+  contact_image_mime_type: string | null;
+  contact_image_size_bytes: number | null;
+};
+
+function mapSiteSettingsImageColumns(
+  slot: "about_principal" | "contact",
+  image: Awaited<ReturnType<typeof uploadEntityImage>>,
+): Partial<SiteSettingsImageColumns> {
+  if (slot === "about_principal") {
+    return {
+      about_principal_image_bucket: image.image_bucket,
+      about_principal_image_path: image.image_path,
+      about_principal_image_mime_type: image.image_mime_type,
+      about_principal_image_size_bytes: image.image_size_bytes,
+    };
+  }
+
+  return {
+    contact_image_bucket: image.image_bucket,
+    contact_image_path: image.image_path,
+    contact_image_mime_type: image.image_mime_type,
+    contact_image_size_bytes: image.image_size_bytes,
+  };
+}
+
+function isMissingSiteSettingsImageColumnError(error: { code?: string } | null | undefined) {
+  return error?.code === "42703" || error?.code === "PGRST204";
+}
+
+function assertSiteSettingsImageColumnsAvailable(error: { code?: string } | null | undefined) {
+  if (isMissingSiteSettingsImageColumnError(error)) {
+    throw new Error("Kolom gambar site settings belum tersedia. Jalankan migration supabase/migrations/20260520_site_settings_page_images.sql terlebih dahulu.");
+  }
+}
+
 export async function upsertService(formData: FormData) {
   const { supabase } = await requireAdmin();
   const id = optionalText(formData, "id", { maxLength: 64 });
   const recordId = id ?? crypto.randomUUID();
+  const image1File = getOptionalImageFile(formData, "image_1_file");
+  const image2File = getOptionalImageFile(formData, "image_2_file");
+  const hasImageUpload = Boolean(image1File || image2File);
+
+  if (hasImageUpload) {
+    const schemaCheck = await supabase
+      .from("services")
+      .select("image_1_path,image_2_path")
+      .limit(1);
+
+    assertServiceImageColumnsAvailable(schemaCheck.error);
+    if (schemaCheck.error) throw schemaCheck.error;
+  }
+
+  const existingRecord = id && hasImageUpload
+    ? await supabase
+      .from("services")
+      .select("image_1_path,image_2_path")
+      .eq("id", id)
+      .maybeSingle()
+    : null;
+
+  if (existingRecord?.error) {
+    assertServiceImageColumnsAvailable(existingRecord.error);
+    throw existingRecord.error;
+  }
+
   const payload = {
     id: recordId,
     title: requiredText(formData, "title", { minLength: 2, maxLength: 160, disallowNumericOnly: true }),
@@ -788,17 +918,70 @@ export async function upsertService(formData: FormData) {
     is_active: requiredBooleanValue(formData, "is_active"),
   };
 
+  let imagePayload: Partial<ServiceImageColumns> = id ? {} : emptyServiceImageColumns();
+  if (image1File) {
+    const uploadedImage = await uploadEntityImage({
+      owner: "services",
+      recordId,
+      slugSource: `${payload.title} image 1`,
+      file: image1File,
+    });
+    imagePayload = { ...imagePayload, ...mapServiceImageColumns(1, uploadedImage) };
+  }
+
+  if (image2File) {
+    const uploadedImage = await uploadEntityImage({
+      owner: "services",
+      recordId,
+      slugSource: `${payload.title} image 2`,
+      file: image2File,
+    });
+    imagePayload = { ...imagePayload, ...mapServiceImageColumns(2, uploadedImage) };
+  }
+
+  const mutationPayload = { ...payload, ...imagePayload };
+
   if (id) {
-    const { error } = await supabase
+    let { error } = await supabase
       .from("services")
-      .update(payload)
+      .update(mutationPayload)
       .eq("id", id);
+
+    if (isMissingServiceImageColumnError(error) && !hasImageUpload) {
+      const fallbackResult = await supabase
+        .from("services")
+        .update(payload)
+        .eq("id", id);
+      error = fallbackResult.error;
+    }
+
     if (error) throw error;
   } else {
-    const { error } = await supabase
+    let { error } = await supabase
       .from("services")
-      .insert([payload]);
+      .insert([mutationPayload]);
+
+    if (isMissingServiceImageColumnError(error) && !hasImageUpload) {
+      const fallbackResult = await supabase
+        .from("services")
+        .insert([payload]);
+      error = fallbackResult.error;
+    }
+
     if (error) throw error;
+  }
+
+  const existingImagePaths = existingRecord?.data as {
+    image_1_path?: string | null;
+    image_2_path?: string | null;
+  } | null | undefined;
+
+  if (image1File && isStorageObjectPath(existingImagePaths?.image_1_path)) {
+    await removeEntityImage(existingImagePaths?.image_1_path);
+  }
+
+  if (image2File && isStorageObjectPath(existingImagePaths?.image_2_path)) {
+    await removeEntityImage(existingImagePaths?.image_2_path);
   }
 
   revalidatePath("/admin");
@@ -809,12 +992,29 @@ export async function upsertService(formData: FormData) {
 export async function deleteService(formData: FormData) {
   const { supabase } = await requireAdmin();
   const id = requiredText(formData, "id", { maxLength: 64 });
+  const existingRecord = await supabase
+    .from("services")
+    .select("image_1_path,image_2_path")
+    .eq("id", id)
+    .maybeSingle();
+
+  if (existingRecord.error && !isMissingServiceImageColumnError(existingRecord.error)) {
+    throw existingRecord.error;
+  }
+
   const { error } = await supabase
     .from("services")
     .delete()
     .eq("id", id);
 
   if (error) throw error;
+
+  const imagePaths = [
+    existingRecord.data?.image_1_path,
+    existingRecord.data?.image_2_path,
+  ].filter((path): path is string => isStorageObjectPath(path));
+
+  await Promise.all(imagePaths.map((path) => removeEntityImage(path)));
 
   revalidatePath("/admin");
   revalidatePath("/admin/services");
@@ -825,6 +1025,35 @@ export async function updateSiteSettings(formData: FormData) {
   const { supabase } = await requireAdmin();
   const footerHeading = requiredText(formData, "footer_heading", { minLength: 2, maxLength: 180, allowMultiline: true });
   const footerDescription = requiredText(formData, "footer_description", { minLength: 6, maxLength: 800, allowMultiline: true });
+  const aboutPrincipalImageFile = getOptionalImageFile(formData, "about_principal_image_file");
+  const contactImageFile = getOptionalImageFile(formData, "contact_image_file");
+  const hasImageUpload = Boolean(aboutPrincipalImageFile || contactImageFile);
+  let existingImages: {
+    about_principal_image_path?: string | null;
+    contact_image_path?: string | null;
+  } | null = null;
+
+  if (hasImageUpload) {
+    const schemaCheck = await supabase
+      .from("site_settings")
+      .select("about_principal_image_path,contact_image_path")
+      .limit(1);
+
+    assertSiteSettingsImageColumnsAvailable(schemaCheck.error);
+    if (schemaCheck.error) throw schemaCheck.error;
+
+    const existingRecord = await supabase
+      .from("site_settings")
+      .select("about_principal_image_path,contact_image_path")
+      .eq("id", "default")
+      .maybeSingle();
+
+    assertSiteSettingsImageColumnsAvailable(existingRecord.error);
+    if (existingRecord.error) throw existingRecord.error;
+
+    existingImages = existingRecord.data;
+  }
+
   const payload = {
     id: "default",
     studio_name: requiredText(formData, "studio_name", { minLength: 2, maxLength: 160, disallowNumericOnly: true }),
@@ -859,6 +1088,57 @@ export async function updateSiteSettings(formData: FormData) {
 
   if (footerError) {
     throw footerError;
+  }
+
+  if (hasImageUpload) {
+    const uploadedImagePaths: string[] = [];
+    let imagePayload: Partial<SiteSettingsImageColumns> = {};
+
+    try {
+      if (aboutPrincipalImageFile) {
+        const uploadedImage = await uploadEntityImage({
+          owner: "site_settings",
+          recordId: "default",
+          slugSource: "principal page top image",
+          file: aboutPrincipalImageFile,
+        });
+        uploadedImagePaths.push(uploadedImage.image_path);
+        imagePayload = { ...imagePayload, ...mapSiteSettingsImageColumns("about_principal", uploadedImage) };
+      }
+
+      if (contactImageFile) {
+        const uploadedImage = await uploadEntityImage({
+          owner: "site_settings",
+          recordId: "default",
+          slugSource: "contact page image",
+          file: contactImageFile,
+        });
+        uploadedImagePaths.push(uploadedImage.image_path);
+        imagePayload = { ...imagePayload, ...mapSiteSettingsImageColumns("contact", uploadedImage) };
+      }
+
+      const imageUpdate = await supabase
+        .from("site_settings")
+        .update({
+          ...imagePayload,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", "default");
+
+      assertSiteSettingsImageColumnsAvailable(imageUpdate.error);
+      if (imageUpdate.error) throw imageUpdate.error;
+    } catch (error) {
+      await Promise.all(uploadedImagePaths.map((path) => removeEntityImage(path)));
+      throw error;
+    }
+
+    if (aboutPrincipalImageFile && isStorageObjectPath(existingImages?.about_principal_image_path)) {
+      await removeEntityImage(existingImages?.about_principal_image_path);
+    }
+
+    if (contactImageFile && isStorageObjectPath(existingImages?.contact_image_path)) {
+      await removeEntityImage(existingImages?.contact_image_path);
+    }
   }
 
   revalidatePath("/admin");

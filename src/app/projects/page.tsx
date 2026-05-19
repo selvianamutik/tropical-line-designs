@@ -3,6 +3,7 @@ import { ProjectsSimpleFooter } from "@/components/global/projects-simple-footer
 import { ProjectsGridPage } from "@/components/projects/projects-grid-page";
 import { listPublicProjects } from "@/lib/public/projects";
 
+export const dynamic = "force-dynamic";
 
 export default async function ProjectsPage() {
   const projects = await listPublicProjects();

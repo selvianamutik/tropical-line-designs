@@ -173,10 +173,59 @@ create table if not exists public.services (
   description text,
   sort_order integer not null default 0,
   is_active boolean not null default true,
+  image_1_bucket text not null default 'site-media',
+  image_1_path text,
+  image_1_mime_type text,
+  image_1_size_bytes bigint,
+  image_2_bucket text not null default 'site-media',
+  image_2_path text,
+  image_2_mime_type text,
+  image_2_size_bytes bigint,
   created_at timestamptz not null default timezone('utc', now()),
   constraint services_sort_order_check
-    check (sort_order >= 0)
+    check (sort_order >= 0),
+  constraint services_image_1_bucket_check
+    check (image_1_bucket = 'site-media'),
+  constraint services_image_1_path_check
+    check (image_1_path is null or image_1_path ~ '^/?[A-Za-z0-9][A-Za-z0-9/_\\.-]*$'),
+  constraint services_image_1_size_check
+    check (image_1_size_bytes is null or image_1_size_bytes >= 0),
+  constraint services_image_2_bucket_check
+    check (image_2_bucket = 'site-media'),
+  constraint services_image_2_path_check
+    check (image_2_path is null or image_2_path ~ '^/?[A-Za-z0-9][A-Za-z0-9/_\\.-]*$'),
+  constraint services_image_2_size_check
+    check (image_2_size_bytes is null or image_2_size_bytes >= 0)
 );
+
+do $$
+declare
+  design_description text := 'We embody and harmonize our clients'' passion with the beauty of art wrapped in a 2-dimensional design. The design process goes through five stages: Conceptual Design, Design Development, Document for Tender, Document for Construction, and Construction Supervision.';
+  build_description text := 'Not only do we embody the beauty of landscape art into 2-dimensional media, but we also dedicate ourselves to build the beauty into reality, which can be enjoyed directly. With the support of our complete set of construction equipment and planting nursery that has a wide variety of plants exclusively taken care of for our projects, we aim to build beautifully designed landscape architecture into life.';
+begin
+  if not exists (select 1 from public.services where upper(title) = 'DESIGN') then
+    insert into public.services (title, description, sort_order, is_active, image_1_path, image_2_path)
+    values ('DESIGN', design_description, 0, true, '/sofitel/so-1.jpg', '/anantara/an-1.jpg');
+  end if;
+
+  if not exists (select 1 from public.services where upper(title) = 'BUILD') then
+    insert into public.services (title, description, sort_order, is_active, image_1_path, image_2_path)
+    values ('BUILD', build_description, 1, true, '/bajo-well/bw-1.jpg', '/st-regis-bali/stb-1.png');
+  end if;
+
+  update public.services
+  set
+    image_1_path = coalesce(image_1_path, '/sofitel/so-1.jpg'),
+    image_2_path = coalesce(image_2_path, '/anantara/an-1.jpg')
+  where upper(title) = 'DESIGN';
+
+  update public.services
+  set
+    image_1_path = coalesce(image_1_path, '/bajo-well/bw-1.jpg'),
+    image_2_path = coalesce(image_2_path, '/st-regis-bali/stb-1.png')
+  where upper(title) = 'BUILD';
+end
+$$;
 
 create table if not exists public.site_settings (
   id text primary key,
@@ -188,7 +237,27 @@ create table if not exists public.site_settings (
   linkedin_url text,
   footer_heading text,
   footer_description text,
-  updated_at timestamptz not null default timezone('utc', now())
+  about_principal_image_bucket text not null default 'site-media',
+  about_principal_image_path text,
+  about_principal_image_mime_type text,
+  about_principal_image_size_bytes bigint,
+  contact_image_bucket text not null default 'site-media',
+  contact_image_path text default '/sofitel/so-1.jpg',
+  contact_image_mime_type text,
+  contact_image_size_bytes bigint,
+  updated_at timestamptz not null default timezone('utc', now()),
+  constraint site_settings_about_principal_image_bucket_check
+    check (about_principal_image_bucket = 'site-media'),
+  constraint site_settings_about_principal_image_path_check
+    check (about_principal_image_path is null or about_principal_image_path ~ '^/?[A-Za-z0-9][A-Za-z0-9/_\\.-]*$'),
+  constraint site_settings_about_principal_image_size_check
+    check (about_principal_image_size_bytes is null or about_principal_image_size_bytes >= 0),
+  constraint site_settings_contact_image_bucket_check
+    check (contact_image_bucket = 'site-media'),
+  constraint site_settings_contact_image_path_check
+    check (contact_image_path is null or contact_image_path ~ '^/?[A-Za-z0-9][A-Za-z0-9/_\\.-]*$'),
+  constraint site_settings_contact_image_size_check
+    check (contact_image_size_bytes is null or contact_image_size_bytes >= 0)
 );
 
 insert into public.site_settings (

@@ -4,6 +4,10 @@ import { ProjectsSimpleFooter } from "@/components/global/projects-simple-footer
 import { SiteNav } from "@/components/global/site-nav";
 import { getPublicSiteSettings } from "@/lib/public/site-settings";
 
+function isSupabaseStorageUrl(value: string) {
+  return value.includes("/storage/v1/object/public/");
+}
+
 export default async function ContactPage() {
   const settings = await getPublicSiteSettings();
   const addressLines = settings.officeAddress
@@ -94,10 +98,11 @@ export default async function ContactPage() {
       <section className="relative h-[50vh] min-h-[400px] w-full">
         <div className="absolute inset-x-0 top-0 z-10 h-32 bg-gradient-to-b from-[#FDFBF7] to-transparent" />
         <Image
-          src="/sofitel/so-1.jpg"
+          src={settings.contactImageUrl}
           alt="Coastal Resort"
           fill
           className="object-cover"
+          unoptimized={isSupabaseStorageUrl(settings.contactImageUrl)}
         />
       </section>
 

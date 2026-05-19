@@ -10,6 +10,8 @@ export type PublicSiteSettings = {
   linkedinUrl: string | null;
   footerHeading: string;
   footerDescription: string;
+  aboutPrincipalImageUrl: string | null;
+  contactImageUrl: string;
 };
 
 type SiteSettingsRow = {
@@ -21,6 +23,10 @@ type SiteSettingsRow = {
   linkedin_url: string | null;
   footer_heading?: string | null;
   footer_description?: string | null;
+  about_principal_image_bucket?: string | null;
+  about_principal_image_path?: string | null;
+  contact_image_bucket?: string | null;
+  contact_image_path?: string | null;
 };
 
 const fallbackSiteSettings: PublicSiteSettings = {
@@ -33,10 +39,26 @@ const fallbackSiteSettings: PublicSiteSettings = {
   footerHeading: "Holistic tropical landscape design shaped for Bali and beyond.",
   footerDescription:
     "As a landscape design company based in Bali, a tropical paradise in Indonesia, Tropical Line Design focuses on creating landscape designs with a natural and tropical ambiance combined with elegance to fulfill clients' expectations.",
+  aboutPrincipalImageUrl: null,
+  contactImageUrl: "/sofitel/so-1.jpg",
 };
+
+function buildImagePublicUrl(bucket: string | null | undefined, path: string | null | undefined) {
+  if (!path) {
+    return null;
+  }
+
+  if (path.startsWith("/") || /^https?:\/\//.test(path)) {
+    return path;
+  }
+
+  const resolvedBucket = bucket ?? "site-media";
+  return `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/${resolvedBucket}/${path}`;
+}
 
 export const getPublicSiteSettings = cache(async (): Promise<PublicSiteSettings> => {
   const selectVariants = [
+    "studio_name,contact_email,phone_number,office_address,instagram_handle,linkedin_url,footer_heading,footer_description,about_principal_image_bucket,about_principal_image_path,contact_image_bucket,contact_image_path",
     "studio_name,contact_email,phone_number,office_address,instagram_handle,linkedin_url,footer_heading,footer_description",
     "studio_name,contact_email,phone_number,office_address,instagram_handle,linkedin_url",
   ] as const;
@@ -82,5 +104,11 @@ export const getPublicSiteSettings = cache(async (): Promise<PublicSiteSettings>
     linkedinUrl: row.linkedin_url ?? fallbackSiteSettings.linkedinUrl,
     footerHeading: row.footer_heading ?? fallbackSiteSettings.footerHeading,
     footerDescription: row.footer_description ?? fallbackSiteSettings.footerDescription,
+    aboutPrincipalImageUrl: buildImagePublicUrl(
+      row.about_principal_image_bucket,
+      row.about_principal_image_path,
+    ) ?? fallbackSiteSettings.aboutPrincipalImageUrl,
+    contactImageUrl: buildImagePublicUrl(row.contact_image_bucket, row.contact_image_path)
+      ?? fallbackSiteSettings.contactImageUrl,
   };
 });

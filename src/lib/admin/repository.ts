@@ -20,6 +20,38 @@ function withImagePublicUrl<T extends { image_bucket?: string | null; image_path
   return { ...record, image_public_url: publicUrl };
 }
 
+function buildImagePublicUrl(bucket: string | null | undefined, path: string | null | undefined) {
+  if (!path) {
+    return null;
+  }
+
+  if (path.startsWith("/") || /^https?:\/\//.test(path)) {
+    return path;
+  }
+
+  const resolvedBucket = bucket ?? "site-media";
+  return `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/${resolvedBucket}/${path}`;
+}
+
+function withServiceImagePublicUrls(record: ServiceRecord): ServiceRecord {
+  return {
+    ...record,
+    image_1_public_url: buildImagePublicUrl(record.image_1_bucket, record.image_1_path),
+    image_2_public_url: buildImagePublicUrl(record.image_2_bucket, record.image_2_path),
+  };
+}
+
+function withSiteSettingsImagePublicUrls(record: SiteSettingsRecord): SiteSettingsRecord {
+  return {
+    ...record,
+    about_principal_image_public_url: buildImagePublicUrl(
+      record.about_principal_image_bucket,
+      record.about_principal_image_path,
+    ),
+    contact_image_public_url: buildImagePublicUrl(record.contact_image_bucket, record.contact_image_path),
+  };
+}
+
 export async function listPortfolios() {
   const supabase = await createClient();
   const orderedQuery = await supabase
@@ -154,7 +186,7 @@ export async function listServices() {
   }
 
   if (error) throw error;
-  return (data || []) as ServiceRecord[];
+  return ((data || []) as ServiceRecord[]).map(withServiceImagePublicUrls);
 }
 
 export async function getSiteSettings() {
@@ -166,7 +198,7 @@ export async function getSiteSettings() {
     .maybeSingle();
 
   if (error) throw error;
-  return data as SiteSettingsRecord | null;
+  return data ? withSiteSettingsImagePublicUrls(data as SiteSettingsRecord) : null;
 }
 
 export async function getDashboardMetrics(): Promise<DashboardMetrics> {

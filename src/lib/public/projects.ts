@@ -1,4 +1,3 @@
-import { cache } from "react";
 import { supabaseAdmin } from "@/lib/db";
 
 export type GalleryLayout = "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H" | "I" | "J";
@@ -114,7 +113,7 @@ function mapPortfolioToPublicProject(row: PortfolioRow, galleryImages: string[])
   };
 }
 
-export const listPublicProjects = cache(async (): Promise<PublicProjectRecord[]> => {
+export async function listPublicProjects(): Promise<PublicProjectRecord[]> {
   let portfolios: PortfolioRow[] = [];
   const selectVariants = [
     "id,title,slug,location,status,commenced_at,client,category,architect,landscape_consultant,project_size,display_order,description,gallery_layout,image_url,image_bucket,image_path,created_at",
@@ -209,4 +208,4 @@ export const listPublicProjects = cache(async (): Promise<PublicProjectRecord[]>
   }
 
   return portfolios.map((row) => mapPortfolioToPublicProject(row, galleryByPortfolioId.get(row.id) ?? []));
-});
+}

@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { upsertService, deleteService } from "@/app/admin/actions";
 import { AdminPageShell } from "@/components/admin/admin-page-shell";
 import { DeleteResourceForm } from "@/components/admin/delete-resource-form";
@@ -11,6 +12,10 @@ const statusOptions = [
   { label: "Active", value: "true" },
   { label: "Hidden", value: "false" },
 ] as const;
+
+function isSupabaseStorageUrl(value: string) {
+  return value.includes("/storage/v1/object/public/");
+}
 
 export default async function ServicesPage() {
   const services = await listServices();
@@ -29,6 +34,20 @@ export default async function ServicesPage() {
           fields={[
             { name: "title", label: "Service Title", required: true, placeholder: "e.g. Landscape Design" },
             { name: "description", label: "Description", type: "textarea", placeholder: "Short service description..." },
+            {
+              name: "image_1_file",
+              label: "Image 1",
+              type: "file",
+              accept: "image/jpeg,image/png,image/webp,image/avif",
+              helpText: "Upload JPG, PNG, WebP, or AVIF up to 10MB. File will be converted to WebP automatically.",
+            },
+            {
+              name: "image_2_file",
+              label: "Image 2",
+              type: "file",
+              accept: "image/jpeg,image/png,image/webp,image/avif",
+              helpText: "Upload JPG, PNG, WebP, or AVIF up to 10MB. File will be converted to WebP automatically.",
+            },
             { name: "sort_order", label: "Sort Order", type: "number", defaultValue: 0, min: 0 },
             {
               name: "is_active",
@@ -53,6 +72,7 @@ export default async function ServicesPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>Service</TableHead>
+                <TableHead>Images</TableHead>
                 <TableHead>Order</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="w-[120px] text-right">Actions</TableHead>
@@ -65,6 +85,28 @@ export default async function ServicesPage() {
               <TableCell>
                 <p className="font-semibold">{service.title}</p>
                 <p className="mt-1 line-clamp-2 text-sm text-[#6b6762]">{service.description ?? "-"}</p>
+              </TableCell>
+              <TableCell>
+                <div className="flex gap-2">
+                  {[service.image_1_public_url, service.image_2_public_url].filter(Boolean).map((imageUrl, imageIndex) => (
+                    <div
+                      key={`${service.id}-image-${imageIndex}`}
+                      className="relative h-14 w-20 overflow-hidden rounded-[2px] bg-[#efe7dc]"
+                    >
+                      <Image
+                        src={imageUrl as string}
+                        alt={`${service.title} image ${imageIndex + 1}`}
+                        fill
+                        sizes="80px"
+                        className="object-cover"
+                        unoptimized={isSupabaseStorageUrl(imageUrl as string)}
+                      />
+                    </div>
+                  ))}
+                  {!service.image_1_public_url && !service.image_2_public_url ? (
+                    <span className="text-sm text-[#8a867f]">-</span>
+                  ) : null}
+                </div>
               </TableCell>
               <TableCell className="text-[#6b6762]">{service.sort_order}</TableCell>
               <TableCell>
@@ -83,6 +125,26 @@ export default async function ServicesPage() {
                     fields={[
                       { name: "title", label: "Service Title", required: true, defaultValue: service.title },
                       { name: "description", label: "Description", type: "textarea", defaultValue: service.description },
+                      {
+                        name: "image_1_file",
+                        label: "Image 1",
+                        type: "file",
+                        accept: "image/jpeg,image/png,image/webp,image/avif",
+                        currentMediaUrl: service.image_1_public_url,
+                        helpText: service.image_1_public_url
+                          ? "Leave empty to keep the current image. New uploads will be converted to WebP automatically."
+                          : "Leave empty if you do not want to add an image yet. New uploads will be converted to WebP automatically.",
+                      },
+                      {
+                        name: "image_2_file",
+                        label: "Image 2",
+                        type: "file",
+                        accept: "image/jpeg,image/png,image/webp,image/avif",
+                        currentMediaUrl: service.image_2_public_url,
+                        helpText: service.image_2_public_url
+                          ? "Leave empty to keep the current image. New uploads will be converted to WebP automatically."
+                          : "Leave empty if you do not want to add an image yet. New uploads will be converted to WebP automatically.",
+                      },
                       { name: "sort_order", label: "Sort Order", type: "number", min: 0, defaultValue: service.sort_order },
                       {
                         name: "is_active",

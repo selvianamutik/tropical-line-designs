@@ -1,17 +1,19 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 const INTRO_STORAGE_KEY = "has-seen-intro-v1";
 const INTRO_RESET_INTERVAL_MS = 5 * 60 * 1000;
 const REMOTE_INTRO_VIDEO_URL = "https://raw.githubusercontent.com/selvianamutik/tropical-line-designs/main/intro(1).mp4";
 const LOCAL_INTRO_VIDEO_URL = "/intro.mp4";
+const INTRO_AUDIO_URL = "/audio/intro-water-flow.mp3";
 
 export function IntroOverlay() {
   const [isVisible, setIsVisible] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
   const [videoSrc, setVideoSrc] = useState(REMOTE_INTRO_VIDEO_URL);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
     setIsMounted(true);
@@ -33,7 +35,50 @@ export function IntroOverlay() {
     }
   }, []);
 
+  useEffect(() => {
+    const audio = audioRef.current;
+
+    if (!isVisible || !audio) {
+      return;
+    }
+
+    const playIntroAudio = () => {
+      void audio.play().catch(() => {
+        // Browsers can block audible autoplay without a user gesture.
+      });
+    };
+
+    const resetIntroAudio = () => {
+      audio.pause();
+      audio.currentTime = 0;
+    };
+
+    playIntroAudio();
+
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        audio.pause();
+        return;
+      }
+
+      playIntroAudio();
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      resetIntroAudio();
+    };
+  }, [isVisible]);
+
   const handleDismiss = () => {
+    const audio = audioRef.current;
+    if (audio) {
+      audio.pause();
+      audio.currentTime = 0;
+    }
+
     setIsVisible(false);
     localStorage.setItem(INTRO_STORAGE_KEY, Date.now().toString());
     // Restore scrolling
@@ -55,6 +100,8 @@ export function IntroOverlay() {
           className="fixed inset-0 z-[9999] bg-[#0a0a0a] overflow-hidden cursor-pointer"
           onClick={handleDismiss}
         >
+          <audio ref={audioRef} src={INTRO_AUDIO_URL} preload="auto" />
+
           {/* Video Background with Overlay */}
           <div className="absolute inset-0 w-full h-full">
             <video

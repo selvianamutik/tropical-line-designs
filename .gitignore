@@ -15,3 +15,5 @@ directives/*
 execution/*
 .agents/*
 public/intro.mp4
+.playwright-mcp
+supabase/migrations

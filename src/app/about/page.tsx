@@ -1,4 +1,4 @@
-import Image from "next/image";
+import { TeamMemberPortrait } from "@/components/about/team-member-portrait";
 import { studioData } from "@/data/about";
 import { listPublicTeamMembers } from "@/lib/public/about";
 
@@ -14,13 +14,11 @@ export default async function AboutStudioPage() {
         {principal ? (
           <div className="float-left mr-8 mb-4 w-[200px] md:w-[240px] flex-shrink-0">
             <div className="relative aspect-[3/4] w-full">
-              <Image
+              <TeamMemberPortrait
                 src={principal.image}
                 alt={principal.name}
-                fill
-                className="object-cover rounded-sm"
+                className="grayscale-0 hover:grayscale-0"
                 sizes="(max-width: 768px) 200px, 240px"
-                unoptimized={principal.image.includes("/storage/v1/object/public/")}
               />
             </div>
           </div>

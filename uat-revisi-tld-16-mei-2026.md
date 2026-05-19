@@ -10,6 +10,11 @@ Dokumen ini berisi skenario User Acceptance Test untuk fitur yang berubah berdas
   - `20260518_site_settings_footer_copy.sql`
   - `20260518_portfolio_display_order.sql`
   - `20260518_services.sql`
+  - `20260519_services_design_build.sql`
+  - `20260520_services_images.sql`
+  - `20260520_site_settings_page_images.sql`
+- Asset audio intro tersedia di `public/audio/intro-water-flow.mp3`.
+- Supabase Storage/media upload untuk admin settings dan services dapat diakses dari environment test.
 - Browser test minimal: Chrome desktop dan mobile viewport.
 
 ## Format Status
@@ -684,6 +689,8 @@ Ekspektasi:
   - `/projects`
   - `/about`
   - `/about/services`
+  - `/contact`
+  - `/login`
   - `/admin/projects`
   - `/admin/services`
   - `/admin/settings`
@@ -702,6 +709,182 @@ Ekspektasi:
 - Warning boleh muncul selama tidak menggagalkan build.
 - Tidak ada error yang menyebabkan build berhenti.
 - Build dapat dilanjutkan untuk deployment Vercel.
+
+Status: `___`
+
+## 12. UAT Tambahan Fitur Baru Pasca Revisi
+
+### UAT-39 - Public Services Menampilkan 2 Image per Service
+
+Langkah:
+
+1. Buka `/about/services`.
+2. Amati setiap item service yang tampil, terutama `DESIGN` dan `BUILD`.
+3. Cek tampilan desktop dan mobile viewport.
+
+Ekspektasi:
+
+- Setiap service menampilkan 2 image.
+- Image tidak blank dan tidak broken.
+- Jika data image dari database belum tersedia, fallback image tetap tampil.
+- Layout tetap rapi di desktop dan mobile.
+
+Status: `___`
+
+### UAT-40 - Admin Services Dapat Mengatur 2 Image per Service
+
+Langkah:
+
+1. Login ke `/admin`.
+2. Buka `/admin/services`.
+3. Edit salah satu service.
+4. Upload atau ganti `Image 1` dan `Image 2`.
+5. Simpan.
+6. Buka `/about/services`.
+
+Ekspektasi:
+
+- Admin dapat menyimpan 2 image untuk satu service.
+- Halaman publik menampilkan image terbaru sesuai data admin.
+- Image lama tidak lagi tampil jika sudah diganti.
+- Service tetap bisa diedit, di-hide, dihapus, dan diurutkan seperti sebelumnya.
+
+Status: `___`
+
+### UAT-41 - Admin Settings Memiliki Pengaturan Image Halaman
+
+Langkah:
+
+1. Login ke `/admin`.
+2. Buka `/admin/settings`.
+3. Cari section pengaturan image halaman.
+
+Ekspektasi:
+
+- Field `Principal Page Top Image` tersedia.
+- Field `Contact Page Image` tersedia.
+- Preview image tampil jika data sudah ada.
+- Halaman tidak menampilkan hydration warning pada console browser.
+
+Status: `___`
+
+### UAT-42 - Principal Page Top Image Mengubah Image Atas Halaman About
+
+Langkah:
+
+1. Buka `/admin/settings`.
+2. Upload image baru pada field `Principal Page Top Image`.
+3. Klik `Save Settings`.
+4. Buka `/about`.
+5. Amati image besar di bagian atas halaman Principal/About.
+
+Ekspektasi:
+
+- Image besar di bagian atas halaman `/about` berubah sesuai setting admin.
+- Foto principal/person di konten bawah tidak berubah karena tetap mengikuti data team member.
+- Jika image setting gagal dimuat, fallback image tetap tampil rapi.
+
+Status: `___`
+
+### UAT-43 - Contact Page Image Mengubah Image Halaman Contact
+
+Langkah:
+
+1. Buka `/admin/settings`.
+2. Upload image baru pada field `Contact Page Image`.
+3. Klik `Save Settings`.
+4. Buka `/contact`.
+
+Ekspektasi:
+
+- Image pada halaman `/contact` berubah sesuai setting admin.
+- Tidak ada broken image pada halaman contact.
+- Tampilan tetap rapi di desktop dan mobile.
+
+Status: `___`
+
+### UAT-44 - Intro Overlay Memutar Musik Hanya Saat Overlay Tampil
+
+Langkah:
+
+1. Hapus localStorage key `has-seen-intro-v1` atau gunakan incognito browser.
+2. Buka homepage `/`.
+3. Amati intro overlay.
+4. Klik area overlay untuk masuk ke website.
+
+Ekspektasi:
+
+- Intro overlay tampil.
+- Audio intro dicoba autoplay dari asset lokal `/audio/intro-water-flow.mp3`.
+- Jika browser memblokir autoplay, overlay tetap berjalan normal tanpa error UI.
+- Setelah overlay ditutup, audio berhenti dan reset ke awal.
+
+Status: `___`
+
+### UAT-45 - Intro Audio Tidak Berjalan Saat Overlay Tidak Tampil
+
+Langkah:
+
+1. Buka homepage `/` sampai intro overlay pernah ditutup.
+2. Pastikan localStorage key `has-seen-intro-v1` masih aktif.
+3. Refresh homepage sebelum interval intro reset.
+
+Ekspektasi:
+
+- Intro overlay tidak tampil.
+- Elemen audio intro tidak perlu dibuat/diputar.
+- Tidak ada suara intro yang berjalan di background.
+
+Status: `___`
+
+### UAT-46 - Intro Audio Pause Saat Tab Tidak Aktif
+
+Langkah:
+
+1. Hapus localStorage key `has-seen-intro-v1` atau gunakan incognito browser.
+2. Buka homepage `/` sampai intro overlay tampil.
+3. Pindah ke tab/browser lain.
+4. Kembali ke tab homepage.
+
+Ekspektasi:
+
+- Saat tab tidak aktif, audio intro pause.
+- Saat tab aktif kembali dan overlay masih tampil, audio dicoba play lagi.
+- Tidak ada error UI jika autoplay tetap diblokir browser.
+
+Status: `___`
+
+### UAT-47 - Invalid Refresh Token Tidak Mengunci Login
+
+Langkah:
+
+1. Simulasikan kondisi cookie/session Supabase yang stale atau gunakan browser yang sebelumnya pernah mengalami error `refresh_token_not_found`.
+2. Buka `/login`.
+3. Coba login ulang menggunakan akun admin valid.
+
+Ekspektasi:
+
+- User tidak terjebak error `Invalid Refresh Token: Refresh Token Not Found`.
+- Cookie Supabase yang stale dibersihkan otomatis.
+- Halaman login tetap dapat dibuka.
+- Setelah login ulang berhasil, user dapat masuk ke area admin.
+
+Status: `___`
+
+### UAT-48 - Admin Settings Tidak Menghasilkan Hydration Mismatch
+
+Langkah:
+
+1. Login ke `/admin`.
+2. Buka `/admin/settings`.
+3. Buka browser console.
+4. Refresh halaman.
+
+Ekspektasi:
+
+- Tidak muncul error hydration mismatch untuk atribut form `encType`.
+- Form settings tetap dapat disubmit.
+- Upload image settings tetap berjalan normal.
 
 Status: `___`
 

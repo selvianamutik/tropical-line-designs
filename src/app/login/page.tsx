@@ -1,25 +1,15 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import { loginWithPassword } from "@/app/login/actions";
-import { createClient } from "@/lib/supabase/server";
 
 export default async function LoginPage({
   searchParams,
 }: {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  const supabase = await createClient();
-  const [{ data }, params] = await Promise.all([
-    supabase.auth.getUser(),
-    (searchParams ?? Promise.resolve({})) as Promise<Record<string, string | string[] | undefined>>,
-  ]);
+  const params = await ((searchParams ?? Promise.resolve({})) as Promise<Record<string, string | string[] | undefined>>);
   const error = typeof params.error === "string" ? params.error : undefined;
   const message = typeof params.message === "string" ? params.message : undefined;
   const next = typeof params.next === "string" && params.next.startsWith("/") ? params.next : "/admin";
-
-  if (data.user?.app_metadata?.is_admin) {
-    redirect("/admin");
-  }
 
   return (
     <main className="min-h-screen bg-[#f6f0e6] text-[#383532]">

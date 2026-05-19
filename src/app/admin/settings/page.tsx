@@ -27,6 +27,8 @@ export default async function SettingsPage() {
           linkedin_url: settings?.linkedin_url ?? "",
           footer_heading: settings?.footer_heading ?? fallbackFooterHeading,
           footer_description: settings?.footer_description ?? fallbackFooterDescription,
+          about_principal_image_url: settings?.about_principal_image_public_url ?? null,
+          contact_image_url: settings?.contact_image_public_url ?? "/sofitel/so-1.jpg",
         }}
       />
     </AdminPageShell>
