@@ -4,7 +4,7 @@ import Image from "next/image";
 import { useEffect, useRef } from "react";
 import { X, ArrowLeft, ArrowRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { PublicProjectRecord, GalleryLayout } from "@/lib/public/projects";
+import { PublicProjectRecord } from "@/lib/public/projects";
 
 interface ProjectOverlayProps {
   project: PublicProjectRecord;
@@ -84,7 +84,6 @@ export function ProjectOverlay({
   if (!isOpen) return null;
 
   const images = project.images || [project.image];
-  const layout = project.galleryLayout || "A";
 
   return (
     <AnimatePresence>
@@ -184,23 +183,18 @@ export function ProjectOverlay({
           <div className="mx-auto max-w-[1280px]">
             <div className="mb-8 flex items-end justify-between gap-6">
               <div>
-                <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-[#8a867f]">Gallery</p>
-                <h2 className="mt-3 font-display text-[32px] font-bold uppercase leading-none tracking-[-0.04em] text-[#1a1a1a] md:text-[48px]">
-                  Project Collage
+                <h2 className="font-display text-[32px] font-bold uppercase leading-none tracking-[-0.04em] text-[#1a1a1a] md:text-[48px]">
+                  Galeri Project
                 </h2>
               </div>
             </div>
 
-            <div className="flex flex-col gap-4 md:hidden">
+            <div className="flex flex-col gap-4">
               {images.map((img, i) => (
                 <div key={`${img}-${i}`} className="relative aspect-video w-full overflow-hidden rounded-sm bg-[#e8dfd2]">
                   <ProjectImage src={img} alt={`${project.title} ${i + 1}`} orderIndex={i} showOrderLabel={showImageOrderLabels} />
                 </div>
               ))}
-            </div>
-
-            <div className="hidden min-h-screen items-center justify-center md:flex">
-              <ProjectGalleryTemplate layout={layout} images={images} showImageOrderLabels={showImageOrderLabels} />
             </div>
           </div>
         </section>
@@ -225,220 +219,4 @@ export function ProjectOverlay({
       </motion.div>
     </AnimatePresence>
   );
-}
-
-function ProjectGalleryTemplate({
-  layout,
-  images,
-  showImageOrderLabels,
-}: {
-  layout: GalleryLayout;
-  images: string[];
-  showImageOrderLabels: boolean;
-}) {
-  // Pad images array to ensure we have enough for layouts
-  const safeImages = [...images];
-  while (safeImages.length < 4) safeImages.push(images[0]);
-
-  if (layout === "A") {
-    // Template A (Anantara style): Big top, long left, two small right stacked
-    return (
-      <div className="grid grid-cols-2 grid-rows-2 gap-4 h-screen w-[90%] aspect-square md:aspect-auto">
-        <div className="relative col-span-2 row-span-1">
-          <ProjectImage src={safeImages[0]} alt="Project" orderIndex={0} showOrderLabel={showImageOrderLabels} />
-        </div>
-        <div className="relative col-span-1 row-span-1">
-          <ProjectImage src={safeImages[1]} alt="Project" orderIndex={1} showOrderLabel={showImageOrderLabels} />
-        </div>
-        <div className="flex flex-col gap-4">
-           <div className="relative flex-1">
-             <ProjectImage src={safeImages[2]} alt="Project" orderIndex={2} showOrderLabel={showImageOrderLabels} />
-           </div>
-           <div className="relative flex-1">
-             <ProjectImage src={safeImages[3]} alt="Project" orderIndex={3} showOrderLabel={showImageOrderLabels} />
-           </div>
-        </div>
-      </div>
-    );
-  }
-  
-  if (layout === "B") {
-    // Template B (Bajo style): Two horizontal top, two square bottom overlapping
-    return (
-      <div className="flex flex-col gap-4 h-screen w-[90%] justify-between relative aspect-square md:aspect-auto">
-        <div className="grid grid-cols-3 gap-4 h-[40%] absolute w-[145%] right-0">
-          <div className="relative col-span-2">
-            <ProjectImage src={safeImages[0]} alt="Project" orderIndex={0} showOrderLabel={showImageOrderLabels} />
-          </div>
-          <div className="relative">
-            <ProjectImage src={safeImages[1]} alt="Project" orderIndex={1} showOrderLabel={showImageOrderLabels} />
-          </div>
-        </div>
-        <div className=""></div>
-        <div className="grid grid-cols-3 grid-rows-3 relative gap-4 h-[63%]">
-          <div className="relative col-start-2 col-span-2 row-span-2 border-t-[12px] border-l-[12px] border-white">
-            <ProjectImage src={safeImages[3]} alt="Project" orderIndex={3} showOrderLabel={showImageOrderLabels} />
-          </div>
-          <div className="relative row-start-3">
-            <div className="absolute bottom-0 w-[500px] h-[300px] border-r-[12px] border-t-[12px] border-white">
-              <ProjectImage src={safeImages[2]} alt="Project" orderIndex={2} showOrderLabel={showImageOrderLabels} />
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-  
-  if (layout === "C") {
-    // Template C (Sofitel style): Big top, one square left, two small right stacked
-    return (
-      <div className="grid grid-cols-2 grid-rows-3 gap-4 h-screen w-[90%] aspect-square md:aspect-auto">
-        <div className="relative col-span-2 row-span-2">
-          <ProjectImage src={safeImages[0]} alt="Project" orderIndex={0} showOrderLabel={showImageOrderLabels} />
-        </div>
-        <div className="relative col-span-1 row-span-1">
-          <ProjectImage src={safeImages[1]} alt="Project" orderIndex={1} showOrderLabel={showImageOrderLabels} />
-        </div>
-        <div className="flex flex-col gap-4">
-           <div className="relative flex-1"> 
-             <ProjectImage src={safeImages[2]} alt="Project" orderIndex={2} showOrderLabel={showImageOrderLabels} />
-           </div>
-        </div>
-      </div>
-    );
-  }
-  
-  if (layout === "D") {
-    // Template D (Four Seasons style): One dominant image with subtle offset siblings
-    return (
-      <div className="relative h-screen w-[90%]">
-         <div className="relative w-full h-full shadow-2xl">
-            <ProjectImage src={safeImages[0]} alt="Project" orderIndex={0} showOrderLabel={showImageOrderLabels} />
-         </div>
-         {/* Subtle floating detail (optional layout variation)
-         <div className="absolute top-1/2 right-0 -translate-y-1/2 w-1/3 h-1/2 hidden md:block border-8 border-white shadow-xl">
-         <ProjectImage src={safeImages[1]} alt="Project" />
-         </div> */}
-      </div>
-    );
-  }
-  
-  if (layout === "E") {
-    // Template A (Anantara style): Big top, long left, two small right stacked
-    return (
-      <div className="grid grid-cols-2 grid-rows-2 relative gap-4 h-screen w-[90%] aspect-square md:aspect-auto">
-        <div className="relative col-span-2 row-span-1">
-          <ProjectImage src={safeImages[0]} alt="Project" orderIndex={0} showOrderLabel={showImageOrderLabels} />
-        </div>
-        <div className="relative col-span-1 row-span-1">
-          <ProjectImage src={safeImages[1]} alt="Project" orderIndex={1} showOrderLabel={showImageOrderLabels} />
-        </div>
-        <div className="flex flex-col gap-4">
-           <div className="relative h-[290px] mt-auto">
-             <ProjectImage src={safeImages[2]} alt="Project" orderIndex={2} showOrderLabel={showImageOrderLabels} />
-           </div>
-          <div className="absolute top-[55%] right-0 -translate-y-1/2 w-[60%] h-[40%] hidden md:block border-l-[12px] border-y-[12px] border-white">
-            <ProjectImage src={safeImages[3]} alt="Project" orderIndex={3} showOrderLabel={showImageOrderLabels} />
-          </div>
-        </div>
-      </div>
-    );
-  }
-  
-  if (layout === "F") {
-    // Template A (Anantara style): Big top, long left, two small right stacked
-    return (
-      <div className="grid grid-cols-2 grid-rows-2 relative h-screen gap-4 w-[90%] aspect-square md:aspect-auto">
-        <div className="relative col-span-2 row-span-1">
-          <ProjectImage src={safeImages[0]} alt="Project" orderIndex={0} showOrderLabel={showImageOrderLabels} />
-        </div>
-        <div className="absolute flex flex-col gap-4 w-full h-full z-10">
-          <div className="absolute top-1/2 right-0 -translate-y-1/2 w-[60%] h-[40%] hidden md:block border-l-[12px] border-y-[12px] border-white">
-            <ProjectImage src={safeImages[2]} alt="Project" orderIndex={2} showOrderLabel={showImageOrderLabels} />
-          </div>
-        </div>
-        <div className="relative col-span-2 row-span-1">
-          <ProjectImage src={safeImages[1]} alt="Project" orderIndex={1} showOrderLabel={showImageOrderLabels} />
-        </div>
-      </div>
-    );
-  }
-
-  if (layout === "G") {
-    // Template C (Sofitel style): Big top, one square left, two small right stacked
-    return (
-      <div className="grid grid-cols-2 grid-rows-3 gap-4 h-screen w-[90%] aspect-square md:aspect-auto">
-        <div className="relative col-span-2 row-span-1">
-          <ProjectImage src={safeImages[0]} alt="Project" orderIndex={0} showOrderLabel={showImageOrderLabels} />
-        </div>
-        <div className="relative col-span-1 row-span-1">
-          <ProjectImage src={safeImages[1]} alt="Project" orderIndex={1} showOrderLabel={showImageOrderLabels} />
-        </div>
-        <div className="flex flex-col gap-4">
-           <div className="relative flex-1"> 
-             <ProjectImage src={safeImages[2]} alt="Project" orderIndex={2} showOrderLabel={showImageOrderLabels} />
-           </div>
-        </div>
-        <div className="relative col-span-2 row-span-1">
-          <ProjectImage src={safeImages[3]} alt="Project" orderIndex={3} showOrderLabel={showImageOrderLabels} />
-        </div>
-      </div>
-    );
-  }
-   
-  if (layout === "H") {
-    // Template C (Sofitel style): Big top, one square left, two small right stacked
-    return (
-      <div className="grid grid-cols-2 grid-rows-3 gap-4 h-screen w-[90%] aspect-square md:aspect-auto float-end">
-        <div className="relative col-span-2 row-span-1">
-          <ProjectImage src={safeImages[0]} alt="Project" orderIndex={0} showOrderLabel={showImageOrderLabels} />
-        </div>
-        <div className="relative col-span-2 row-span-1">
-          <ProjectImage src={safeImages[1]} alt="Project" orderIndex={1} showOrderLabel={showImageOrderLabels} />
-        </div>
-        <div className="relative col-span-2 row-span-1">
-          <ProjectImage src={safeImages[2]} alt="Project" orderIndex={2} showOrderLabel={showImageOrderLabels} />
-        </div>
-      </div>
-    );
-  }
-
-  if (layout === "I") {
-    // Template C (Sofitel style): Big top, one square left, two small right stacked
-    return (
-      <div className="grid grid-cols-3 grid-rows-3 gap-4 h-screen w-[90%] aspect-square md:aspect-auto">
-        <div className="relative col-span-2 row-span-1">
-          <ProjectImage src={safeImages[0]} alt="Project" orderIndex={0} showOrderLabel={showImageOrderLabels} />
-        </div>
-        <div className="flex flex-col gap-4">
-           <div className="relative flex-1"> 
-             <ProjectImage src={safeImages[1]} alt="Project" orderIndex={1} showOrderLabel={showImageOrderLabels} />
-           </div>
-        </div>
-        <div className="relative col-span-3 row-span-2">
-          <ProjectImage src={safeImages[2]} alt="Project" orderIndex={2} showOrderLabel={showImageOrderLabels} />
-        </div>
-      </div>
-    );
-  }
-  if (layout === "J") {
-    // Template C (Sofitel style): Big top, one square left, two small right stacked
-    return (
-      <div className="grid grid-cols-3 grid-rows-3 gap-4 h-screen w-[90%] aspect-square md:aspect-auto">
-        <div className="relative col-span-1 row-span-1">
-          <ProjectImage src={safeImages[0]} alt="Project" orderIndex={0} showOrderLabel={showImageOrderLabels} />
-        </div>
-        <div className="flex flex-col gap-4 col-span-2">
-           <div className="relative flex-1"> 
-             <ProjectImage src={safeImages[1]} alt="Project" orderIndex={1} showOrderLabel={showImageOrderLabels} />
-           </div>
-        </div>
-        <div className="relative col-span-3 row-span-2">
-          <ProjectImage src={safeImages[2]} alt="Project" orderIndex={2} showOrderLabel={showImageOrderLabels} />
-        </div>
-      </div>
-    );
-  }
-
-  return null;
 }
