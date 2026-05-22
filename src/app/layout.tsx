@@ -34,6 +34,7 @@ export default function RootLayout({
       <body className={`${inter.variable} ${manrope.variable}`}>
         <IntroStorageReset />
         {children}
+        <SpeedInsights />
       </body>
     </html>
   );
