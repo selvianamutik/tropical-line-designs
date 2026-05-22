@@ -1,21 +1,14 @@
-import Image from "next/image";
-import { upsertService, deleteService } from "@/app/admin/actions";
+import { upsertService } from "@/app/admin/actions";
 import { AdminPageShell } from "@/components/admin/admin-page-shell";
-import { DeleteResourceForm } from "@/components/admin/delete-resource-form";
+import { AdminServicesTable } from "@/components/admin/admin-services-table";
 import { EmptyState } from "@/components/admin/empty-state";
-import { PaginatedTable } from "@/components/admin/paginated-table";
 import { ResourceFormDialog } from "@/components/admin/resource-form-dialog";
-import { TableCell, TableHead, TableHeader, TableRow } from "@/components/admin/ui/Table";
 import { listServices } from "@/lib/admin/repository";
 
 const statusOptions = [
   { label: "Active", value: "true" },
   { label: "Hidden", value: "false" },
 ] as const;
-
-function isSupabaseStorageUrl(value: string) {
-  return value.includes("/storage/v1/object/public/");
-}
 
 export default async function ServicesPage() {
   const services = await listServices();
@@ -33,22 +26,22 @@ export default async function ServicesPage() {
           action={upsertService}
           fields={[
             { name: "title", label: "Service Title", required: true, placeholder: "e.g. Landscape Design" },
-            { name: "description", label: "Description", type: "textarea", placeholder: "Short service description..." },
+            { name: "description", label: "Description", type: "textarea", maxLength: 1200, placeholder: "Short service description..." },
             {
               name: "image_1_file",
               label: "Image 1",
               type: "file",
-              accept: "image/jpeg,image/png,image/webp,image/avif",
-              helpText: "Upload JPG, PNG, WebP, or AVIF up to 10MB. File will be converted to WebP automatically.",
+              required: true,
+              accept: "image/jpeg,image/png,image/webp",
+              helpText: "Upload service image 1.",
             },
             {
               name: "image_2_file",
               label: "Image 2",
               type: "file",
-              accept: "image/jpeg,image/png,image/webp,image/avif",
-              helpText: "Upload JPG, PNG, WebP, or AVIF up to 10MB. File will be converted to WebP automatically.",
+              accept: "image/jpeg,image/png,image/webp",
+              helpText: "Upload service image 2.",
             },
-            { name: "sort_order", label: "Sort Order", type: "number", defaultValue: 0, min: 0 },
             {
               name: "is_active",
               label: "Visibility",
@@ -67,101 +60,7 @@ export default async function ServicesPage() {
           description="Add services to populate the public About services page."
         />
       ) : (
-        <PaginatedTable
-          headers={
-            <TableHeader>
-              <TableRow>
-                <TableHead>Service</TableHead>
-                <TableHead>Images</TableHead>
-                <TableHead>Order</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="w-[120px] text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-          }
-        >
-          {services.map((service) => (
-            <TableRow key={service.id}>
-              <TableCell>
-                <p className="font-semibold">{service.title}</p>
-                <p className="mt-1 line-clamp-2 text-sm text-[#6b6762]">{service.description ?? "-"}</p>
-              </TableCell>
-              <TableCell>
-                <div className="flex gap-2">
-                  {[service.image_1_public_url, service.image_2_public_url].filter(Boolean).map((imageUrl, imageIndex) => (
-                    <div
-                      key={`${service.id}-image-${imageIndex}`}
-                      className="relative h-14 w-20 overflow-hidden rounded-[2px] bg-[#efe7dc]"
-                    >
-                      <Image
-                        src={imageUrl as string}
-                        alt={`${service.title} image ${imageIndex + 1}`}
-                        fill
-                        sizes="80px"
-                        className="object-cover"
-                        unoptimized={isSupabaseStorageUrl(imageUrl as string)}
-                      />
-                    </div>
-                  ))}
-                  {!service.image_1_public_url && !service.image_2_public_url ? (
-                    <span className="text-sm text-[#8a867f]">-</span>
-                  ) : null}
-                </div>
-              </TableCell>
-              <TableCell className="text-[#6b6762]">{service.sort_order}</TableCell>
-              <TableCell>
-                <span className="rounded-sm bg-[#f4efe6] px-2 py-1 text-[9px] font-bold uppercase tracking-[0.1em] text-[#8a867f]">
-                  {service.is_active ? "Active" : "Hidden"}
-                </span>
-              </TableCell>
-              <TableCell className="text-right">
-                <div className="flex justify-end gap-2">
-                  <ResourceFormDialog
-                    title="Edit Service"
-                    description="Update the service entry."
-                    submitLabel="Save Changes"
-                    action={upsertService}
-                    initialId={service.id}
-                    fields={[
-                      { name: "title", label: "Service Title", required: true, defaultValue: service.title },
-                      { name: "description", label: "Description", type: "textarea", defaultValue: service.description },
-                      {
-                        name: "image_1_file",
-                        label: "Image 1",
-                        type: "file",
-                        accept: "image/jpeg,image/png,image/webp,image/avif",
-                        currentMediaUrl: service.image_1_public_url,
-                        helpText: service.image_1_public_url
-                          ? "Leave empty to keep the current image. New uploads will be converted to WebP automatically."
-                          : "Leave empty if you do not want to add an image yet. New uploads will be converted to WebP automatically.",
-                      },
-                      {
-                        name: "image_2_file",
-                        label: "Image 2",
-                        type: "file",
-                        accept: "image/jpeg,image/png,image/webp,image/avif",
-                        currentMediaUrl: service.image_2_public_url,
-                        helpText: service.image_2_public_url
-                          ? "Leave empty to keep the current image. New uploads will be converted to WebP automatically."
-                          : "Leave empty if you do not want to add an image yet. New uploads will be converted to WebP automatically.",
-                      },
-                      { name: "sort_order", label: "Sort Order", type: "number", min: 0, defaultValue: service.sort_order },
-                      {
-                        name: "is_active",
-                        label: "Visibility",
-                        type: "select",
-                        required: true,
-                        defaultValue: service.is_active ? "true" : "false",
-                        options: [...statusOptions],
-                      },
-                    ]}
-                  />
-                  <DeleteResourceForm id={service.id} label={`Delete ${service.title}`} action={deleteService} />
-                </div>
-              </TableCell>
-            </TableRow>
-          ))}
-        </PaginatedTable>
+        <AdminServicesTable services={services} />
       )}
     </AdminPageShell>
   );

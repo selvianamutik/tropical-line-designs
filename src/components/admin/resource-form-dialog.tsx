@@ -9,6 +9,12 @@ import { useAdminToast } from "@/components/admin/admin-toast";
 import { Button } from "@/components/admin/ui/Button";
 import { Input } from "@/components/admin/ui/Input";
 import { Modal } from "@/components/admin/ui/Modal";
+import {
+  getAdminFieldInputAttributes,
+  validateAdminFields,
+  type AdminFormFieldType,
+} from "@/lib/admin/form-field-validation";
+import { IMAGE_UPLOAD_ACCEPT, IMAGE_UPLOAD_HELP_TEXT, validateImageFile } from "@/lib/admin/image-validation";
 import { cn } from "@/lib/utils";
 
 type FormFieldOption = {
@@ -19,12 +25,14 @@ type FormFieldOption = {
 interface FormField {
   name: string;
   label: string;
-  type?: "text" | "email" | "number" | "month" | "textarea" | "select" | "file";
+  type?: AdminFormFieldType;
   placeholder?: string;
   defaultValue?: string | number | null;
   required?: boolean;
   min?: number;
   max?: number;
+  minLength?: number;
+  maxLength?: number;
   options?: FormFieldOption[];
   accept?: string;
   helpText?: string;
@@ -68,23 +76,69 @@ export function ResourceFormDialog({
   const [previewImageUrl, setPreviewImageUrl] = useState<string | null>(null);
   const [previewImageLabel, setPreviewImageLabel] = useState("");
   const [selectedFilePreviews, setSelectedFilePreviews] = useState<Record<string, string>>({});
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [fileErrors, setFileErrors] = useState<Record<string, string>>({});
+
+  const clearFileState = () => {
+    Object.values(selectedFilePreviews).forEach((url) => URL.revokeObjectURL(url));
+    setSelectedFilePreviews({});
+    setFieldErrors({});
+    setFileErrors({});
+    setPreviewImageUrl(null);
+    setPreviewImageLabel("");
+  };
+
+  const openDialog = () => {
+    clearFileState();
+    setIsOpen(true);
+  };
+
+  const clearFieldError = (name: string) => {
+    setFieldErrors((current) => {
+      if (!current[name]) {
+        return current;
+      }
+
+      const next = { ...current };
+      delete next[name];
+      return next;
+    });
+  };
+
+  const closeDialog = () => {
+    clearFileState();
+    setIsOpen(false);
+  };
 
   return (
     <>
       {triggerLabel ? (
-        <Button onClick={() => setIsOpen(true)}>
+        <Button onClick={openDialog}>
           <Plus className="mr-2 h-4 w-4" />
           {triggerLabel}
         </Button>
       ) : (
-        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setIsOpen(true)}>
+        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={openDialog}>
           <Pencil className="h-4 w-4 text-[#a5a098]" />
         </Button>
       )}
 
-      <Modal isOpen={isOpen} onClose={() => setIsOpen(false)} title={title} description={description}>
+      <Modal isOpen={isOpen} onClose={closeDialog} title={title} description={description}>
         <form
+          noValidate
           action={async (formData) => {
+            const nextFieldErrors = validateAdminFields(fields, formData);
+            setFieldErrors(nextFieldErrors);
+
+            if (Object.keys(nextFieldErrors).length > 0 || Object.keys(fileErrors).length > 0) {
+              showToast({
+                tone: "error",
+                title: "Input belum valid.",
+                description: "Periksa kembali field yang ditandai sebelum menyimpan.",
+              });
+              return;
+            }
+
             try {
               await action(formData);
               showToast({
@@ -92,7 +146,7 @@ export function ResourceFormDialog({
                 title: successMessage ?? (initialId ? "Perubahan berhasil disimpan." : "Data berhasil ditambahkan."),
               });
               router.refresh();
-              setIsOpen(false);
+              closeDialog();
             } catch (error) {
               showToast({
                 tone: "error",
@@ -105,6 +159,9 @@ export function ResourceFormDialog({
           {initialId ? <input type="hidden" name="id" value={initialId} /> : null}
           <div className="space-y-4">
             {fields.map((field) => {
+              const inputAttributes = getAdminFieldInputAttributes(field);
+              const errorMessage = fieldErrors[field.name];
+
               return (
                 <div key={field.name} className="space-y-2">
                   <label className="text-[10px] font-bold uppercase tracking-[0.1em] text-[#8a867f]">
@@ -115,6 +172,10 @@ export function ResourceFormDialog({
                     <textarea
                       name={field.name}
                       required={field.required}
+                      minLength={inputAttributes.minLength}
+                      maxLength={inputAttributes.maxLength}
+                      aria-invalid={Boolean(errorMessage)}
+                      onChange={() => clearFieldError(field.name)}
                       defaultValue={field.defaultValue?.toString() ?? ""}
                       placeholder={field.placeholder}
                       className={cn(
@@ -126,6 +187,8 @@ export function ResourceFormDialog({
                       <select
                         name={field.name}
                         required={field.required}
+                        aria-invalid={Boolean(errorMessage)}
+                        onChange={() => clearFieldError(field.name)}
                         defaultValue={field.defaultValue?.toString() ?? ""}
                         className={cn(
                           "flex h-10 w-full cursor-pointer appearance-none rounded-sm border border-[#d9d4ca] bg-transparent px-3 py-2 pr-10 text-sm text-[#383532] transition-colors focus-visible:border-[#d97706] focus-visible:outline-none",
@@ -150,9 +213,14 @@ export function ResourceFormDialog({
                         name={field.name}
                         type="file"
                         required={field.required}
-                        accept={field.accept}
+                        accept={IMAGE_UPLOAD_ACCEPT}
                         onChange={(event) => {
                           const file = event.target.files?.[0];
+                          setFileErrors((current) => {
+                            const next = { ...current };
+                            delete next[field.name];
+                            return next;
+                          });
                           setSelectedFilePreviews((current) => {
                             if (!current[field.name]) {
                               return file ? current : current;
@@ -168,6 +236,16 @@ export function ResourceFormDialog({
                             return;
                           }
 
+                          const validation = validateImageFile(file);
+                          if (!validation.valid) {
+                            event.target.value = "";
+                            setFileErrors((current) => ({
+                              ...current,
+                              [field.name]: validation.message,
+                            }));
+                            return;
+                          }
+
                           const objectUrl = URL.createObjectURL(file);
                           setSelectedFilePreviews((current) => ({
                             ...current,
@@ -175,6 +253,9 @@ export function ResourceFormDialog({
                           }));
                         }}
                       />
+                      {fileErrors[field.name] ? (
+                        <p className="text-[11px] font-medium text-[#a13c2f]">{fileErrors[field.name]}</p>
+                      ) : null}
                       {selectedFilePreviews[field.name] ? (
                         <button
                           type="button"
@@ -232,6 +313,7 @@ export function ResourceFormDialog({
                       {field.helpText ? (
                         <p className="text-[11px] text-[#8a867f]">{field.helpText}</p>
                       ) : null}
+                      <p className="text-[11px] text-[#8a867f]">{IMAGE_UPLOAD_HELP_TEXT}</p>
                     </div>
                   ) : (
                     <Input
@@ -240,10 +322,21 @@ export function ResourceFormDialog({
                       required={field.required}
                       placeholder={field.placeholder}
                       defaultValue={field.defaultValue?.toString() ?? ""}
-                      min={field.min}
-                      max={field.max}
+                      min={inputAttributes.min}
+                      max={inputAttributes.max}
+                      minLength={inputAttributes.minLength}
+                      maxLength={inputAttributes.maxLength}
+                      pattern={inputAttributes.pattern}
+                      step={inputAttributes.step}
+                      title={inputAttributes.title}
+                      aria-invalid={Boolean(errorMessage)}
+                      onChange={() => clearFieldError(field.name)}
                     />
                   )}
+
+                  {errorMessage ? (
+                    <p className="text-[11px] font-medium text-[#a13c2f]">{errorMessage}</p>
+                  ) : null}
 
                   {field.type !== "file" && field.helpText ? (
                     <p className="text-[11px] text-[#8a867f]">{field.helpText}</p>
@@ -253,7 +346,7 @@ export function ResourceFormDialog({
             })}
           </div>
           <div className="mt-8 flex justify-end gap-3">
-            <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>
+            <Button type="button" variant="outline" onClick={closeDialog}>
               Cancel
             </Button>
             <SubmitButton label={submitLabel} />

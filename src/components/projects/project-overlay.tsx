@@ -99,6 +99,7 @@ export function ProjectOverlay({
         <div className="fixed top-0 inset-x-0 z-[2010] flex justify-end items-center p-6 md:p-10 pointer-events-none">
           <button 
             onClick={onClose}
+            aria-label="Close project"
             className="pointer-events-auto p-3 bg-white/80 backdrop-blur-md rounded-full hover:bg-white transition-all shadow-lg active:scale-95"
           >
             <X className="w-6 h-6 md:w-8 md:h-8 text-black" />

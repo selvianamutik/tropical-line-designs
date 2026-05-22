@@ -3,7 +3,6 @@
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/admin/auth";
 import {
-  GALLERY_LAYOUTS,
   MEMBER_STATUSES,
   PROJECT_STATUSES,
   optionalHttpUrl,
@@ -12,6 +11,7 @@ import {
   optionalText,
   requiredEmail,
   requiredEnumValue,
+  requiredPhone,
   requiredText,
   requiredYear,
   slugifyOrThrow,
@@ -27,6 +27,75 @@ import {
 function revalidatePublicProjectPaths() {
   revalidatePath("/");
   revalidatePath("/projects");
+}
+
+async function buildUniquePortfolioSlug(
+  supabase: Awaited<ReturnType<typeof requireAdmin>>["supabase"],
+  title: string,
+  currentId: string | null,
+) {
+  const baseSlug = slugifyOrThrow(title);
+  const { data, error } = await supabase
+    .from("portfolios")
+    .select("id,slug");
+
+  if (error) {
+    throw error;
+  }
+
+  const existingSlugs = new Set(
+    (data ?? [])
+      .filter((project) => project.id !== currentId)
+      .map((project) => project.slug as string)
+      .filter(Boolean),
+  );
+
+  if (!existingSlugs.has(baseSlug)) {
+    return baseSlug;
+  }
+
+  let suffix = 2;
+  let slug = `${baseSlug}-${suffix}`;
+  while (existingSlugs.has(slug)) {
+    suffix += 1;
+    slug = `${baseSlug}-${suffix}`;
+  }
+
+  return slug;
+}
+
+async function getNextPortfolioDisplayOrder(supabase: Awaited<ReturnType<typeof requireAdmin>>["supabase"]) {
+  const { data, error } = await supabase
+    .from("portfolios")
+    .select("display_order")
+    .order("display_order", { ascending: false, nullsFirst: false })
+    .limit(1);
+
+  if (error?.code === "42703" || error?.code === "PGRST204") {
+    return 0;
+  }
+
+  if (error) {
+    throw error;
+  }
+
+  const currentLastOrder = Number(data?.[0]?.display_order ?? -1);
+  return Number.isSafeInteger(currentLastOrder) && currentLastOrder >= 0 ? currentLastOrder + 1 : 0;
+}
+
+async function getNextServiceSortOrder(supabase: Awaited<ReturnType<typeof requireAdmin>>["supabase"]) {
+  const { data, error } = await supabase
+    .from("services")
+    .select("sort_order")
+    .order("sort_order", { ascending: false, nullsFirst: false })
+    .limit(1);
+
+  if (error) {
+    throw error;
+  }
+
+  const currentLastOrder = Number(data?.[0]?.sort_order ?? -1);
+  return Number.isSafeInteger(currentLastOrder) && currentLastOrder >= 0 ? currentLastOrder + 1 : 0;
 }
 
 function revalidatePublicAboutPaths() {
@@ -187,19 +256,28 @@ export async function upsertPortfolio(formData: FormData) {
   const id = optionalText(formData, "id", { maxLength: 64 });
   const title = requiredText(formData, "title", { minLength: 2, maxLength: 160, disallowNumericOnly: true });
   const recordId = id ?? crypto.randomUUID();
-  const imageFile = getOptionalImageFile(formData, "image_file");
+  const imageFile = await getOptionalImageFile(formData, "image_file");
   const existingRecord = id
-    ? await supabase.from("portfolios").select("image_path").eq("id", id).maybeSingle()
+    ? await supabase.from("portfolios").select("image_path,gallery_layout,display_order").eq("id", id).maybeSingle()
     : null;
+  const slug = await buildUniquePortfolioSlug(supabase, title, id);
 
   if (existingRecord?.error) {
     throw existingRecord.error;
   }
 
+  if (!id && !imageFile) {
+    throw new Error('Field "image_file" is required.');
+  }
+
+  const displayOrder = id
+    ? existingRecord?.data?.display_order ?? 0
+    : await getNextPortfolioDisplayOrder(supabase);
+
   const payload = {
     id: recordId,
     title,
-    slug: slugifyOrThrow(title),
+    slug,
     location: requiredText(formData, "location", { minLength: 2, maxLength: 160, disallowNumericOnly: true }),
     status: requiredEnumValue(formData, "status", PROJECT_STATUSES),
     commenced_at: optionalMonthValue(formData, "commenced_at"),
@@ -208,9 +286,9 @@ export async function upsertPortfolio(formData: FormData) {
     architect: optionalText(formData, "architect", { maxLength: 160 }),
     landscape_consultant: optionalText(formData, "landscape_consultant", { maxLength: 160 }),
     project_size: optionalText(formData, "project_size", { maxLength: 80 }),
-    display_order: optionalNonNegativeInteger(formData, "display_order", { max: 100000 }),
+    display_order: displayOrder,
     description: optionalText(formData, "description", { maxLength: 4000, allowMultiline: true }),
-    gallery_layout: requiredEnumValue(formData, "gallery_layout", GALLERY_LAYOUTS),
+    gallery_layout: existingRecord?.data?.gallery_layout ?? "D",
     ...emptyImageColumns(),
   };
   let mutationPayload: typeof payload = payload;
@@ -394,7 +472,7 @@ export async function addPortfolioGalleryImage(formData: FormData) {
   const { supabase } = await requireAdmin();
   const portfolioId = requiredText(formData, "portfolio_id", { maxLength: 64 });
   const title = requiredText(formData, "portfolio_title", { maxLength: 160 });
-  const imageFile = getOptionalImageFile(formData, "image_file");
+  const imageFile = await getOptionalImageFile(formData, "image_file");
 
   if (!imageFile) {
     throw new Error('Field "image_file" is required.');
@@ -529,7 +607,7 @@ export async function upsertTeamMember(formData: FormData) {
   const { supabase } = await requireAdmin();
   const id = optionalText(formData, "id", { maxLength: 64 });
   const recordId = id ?? crypto.randomUUID();
-  const imageFile = getOptionalImageFile(formData, "image_file");
+  const imageFile = await getOptionalImageFile(formData, "image_file");
   const existingRecord = id
     ? await supabase.from("team_members").select("image_path").eq("id", id).maybeSingle()
     : null;
@@ -609,7 +687,7 @@ export async function upsertCollaborator(formData: FormData) {
   const { supabase } = await requireAdmin();
   const id = optionalText(formData, "id", { maxLength: 64 });
   const recordId = id ?? crypto.randomUUID();
-  const imageFile = getOptionalImageFile(formData, "image_file");
+  const imageFile = await getOptionalImageFile(formData, "image_file");
   const existingRecord = id
     ? await supabase.from("collaborators").select("image_path").eq("id", id).maybeSingle()
     : null;
@@ -689,7 +767,7 @@ export async function upsertAward(formData: FormData) {
   const { supabase } = await requireAdmin();
   const id = optionalText(formData, "id", { maxLength: 64 });
   const recordId = id ?? crypto.randomUUID();
-  const imageFile = getOptionalImageFile(formData, "image_file");
+  const imageFile = await getOptionalImageFile(formData, "image_file");
   const existingRecord = id
     ? await supabase.from("awards").select("image_path").eq("id", id).maybeSingle()
     : null;
@@ -883,8 +961,8 @@ export async function upsertService(formData: FormData) {
   const { supabase } = await requireAdmin();
   const id = optionalText(formData, "id", { maxLength: 64 });
   const recordId = id ?? crypto.randomUUID();
-  const image1File = getOptionalImageFile(formData, "image_1_file");
-  const image2File = getOptionalImageFile(formData, "image_2_file");
+  const image1File = await getOptionalImageFile(formData, "image_1_file");
+  const image2File = await getOptionalImageFile(formData, "image_2_file");
   const hasImageUpload = Boolean(image1File || image2File);
 
   if (hasImageUpload) {
@@ -897,10 +975,10 @@ export async function upsertService(formData: FormData) {
     if (schemaCheck.error) throw schemaCheck.error;
   }
 
-  const existingRecord = id && hasImageUpload
+  const existingRecord = id
     ? await supabase
       .from("services")
-      .select("image_1_path,image_2_path")
+      .select(hasImageUpload ? "image_1_path,image_2_path,sort_order" : "sort_order")
       .eq("id", id)
       .maybeSingle()
     : null;
@@ -910,11 +988,25 @@ export async function upsertService(formData: FormData) {
     throw existingRecord.error;
   }
 
+  const existingServiceData = existingRecord?.data as {
+    image_1_path?: string | null;
+    image_2_path?: string | null;
+    sort_order?: number | null;
+  } | null | undefined;
+
+  if (!id && !image1File) {
+    throw new Error('Field "image_1_file" is required.');
+  }
+
+  const sortOrder = id
+    ? existingServiceData?.sort_order ?? 0
+    : await getNextServiceSortOrder(supabase);
+
   const payload = {
     id: recordId,
     title: requiredText(formData, "title", { minLength: 2, maxLength: 160, disallowNumericOnly: true }),
     description: optionalText(formData, "description", { maxLength: 1200, allowMultiline: true }),
-    sort_order: optionalNonNegativeInteger(formData, "sort_order", { max: 100000 }),
+    sort_order: sortOrder,
     is_active: requiredBooleanValue(formData, "is_active"),
   };
 
@@ -971,10 +1063,7 @@ export async function upsertService(formData: FormData) {
     if (error) throw error;
   }
 
-  const existingImagePaths = existingRecord?.data as {
-    image_1_path?: string | null;
-    image_2_path?: string | null;
-  } | null | undefined;
+  const existingImagePaths = existingServiceData;
 
   if (image1File && isStorageObjectPath(existingImagePaths?.image_1_path)) {
     await removeEntityImage(existingImagePaths?.image_1_path);
@@ -1021,12 +1110,70 @@ export async function deleteService(formData: FormData) {
   revalidatePublicAboutPaths();
 }
 
+export async function updateServiceSortOrder(formData: FormData) {
+  const { supabase } = await requireAdmin();
+  const orderedServiceIdsRaw = requiredText(formData, "ordered_service_ids", { maxLength: 10000 });
+
+  let orderedServiceIds: string[];
+  try {
+    const parsed = JSON.parse(orderedServiceIdsRaw);
+    if (!Array.isArray(parsed) || parsed.some((item) => typeof item !== "string" || item.length === 0)) {
+      throw new Error("Invalid service order payload.");
+    }
+    orderedServiceIds = parsed;
+  } catch {
+    throw new Error("Invalid service order payload.");
+  }
+
+  const { data: existingServices, error: existingError } = await supabase
+    .from("services")
+    .select("id");
+
+  if (existingError) {
+    throw existingError;
+  }
+
+  const existingIds = new Set((existingServices ?? []).map((service) => service.id as string));
+  if (existingIds.size !== orderedServiceIds.length || orderedServiceIds.some((id) => !existingIds.has(id))) {
+    throw new Error("Service order does not match the current service list.");
+  }
+
+  const temporaryOffset = orderedServiceIds.length + 1000;
+
+  for (const [index, serviceId] of orderedServiceIds.entries()) {
+    const { error } = await supabase
+      .from("services")
+      .update({ sort_order: temporaryOffset + index })
+      .eq("id", serviceId);
+
+    if (error) {
+      throw error;
+    }
+  }
+
+  for (const [index, serviceId] of orderedServiceIds.entries()) {
+    const { error } = await supabase
+      .from("services")
+      .update({ sort_order: index })
+      .eq("id", serviceId);
+
+    if (error) {
+      throw error;
+    }
+  }
+
+  revalidatePath("/");
+  revalidatePath("/admin");
+  revalidatePath("/admin/services");
+  revalidatePublicAboutPaths();
+}
+
 export async function updateSiteSettings(formData: FormData) {
   const { supabase } = await requireAdmin();
   const footerHeading = requiredText(formData, "footer_heading", { minLength: 2, maxLength: 180, allowMultiline: true });
   const footerDescription = requiredText(formData, "footer_description", { minLength: 6, maxLength: 800, allowMultiline: true });
-  const aboutPrincipalImageFile = getOptionalImageFile(formData, "about_principal_image_file");
-  const contactImageFile = getOptionalImageFile(formData, "contact_image_file");
+  const aboutPrincipalImageFile = await getOptionalImageFile(formData, "about_principal_image_file");
+  const contactImageFile = await getOptionalImageFile(formData, "contact_image_file");
   const hasImageUpload = Boolean(aboutPrincipalImageFile || contactImageFile);
   let existingImages: {
     about_principal_image_path?: string | null;
@@ -1058,7 +1205,7 @@ export async function updateSiteSettings(formData: FormData) {
     id: "default",
     studio_name: requiredText(formData, "studio_name", { minLength: 2, maxLength: 160, disallowNumericOnly: true }),
     contact_email: requiredEmail(formData, "contact_email"),
-    phone_number: requiredText(formData, "phone_number", { minLength: 6, maxLength: 50 }),
+    phone_number: requiredPhone(formData, "phone_number"),
     office_address: requiredText(formData, "office_address", { minLength: 6, maxLength: 500, allowMultiline: true }),
     instagram_handle: optionalHttpUrl(formData, "instagram_handle"),
     linkedin_url: optionalHttpUrl(formData, "linkedin_url"),

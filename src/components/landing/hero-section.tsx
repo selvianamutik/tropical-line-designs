@@ -5,6 +5,7 @@ import { HeroContent } from "@/components/landing/hero-content";
 import { SiteNav } from "@/components/global/site-nav";
 
 export type HeroProject = {
+  slug: string;
   title: string;
   image: string;
   layout?: "bottom-left" | "center" | "top-right" | "split";
@@ -102,6 +103,7 @@ export function HeroSection({
         <HeroContent
           title={displayedProject.title}
           facts={displayedProject.facts}
+          projectHref={`/projects/${encodeURIComponent(displayedProject.slug)}`}
           layout={displayedProject.layout}
         />
       </div>

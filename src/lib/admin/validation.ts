@@ -4,6 +4,7 @@ const GALLERY_LAYOUTS = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"] as co
 const MONTH_PATTERN = /^\d{4}-\d{2}$/;
 const SIMPLE_EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const HTTP_URL_PATTERN = /^https?:\/\/[^\s/$.?#].[^\s]*$/i;
+const PHONE_PATTERN = /^[0-9+\-().\s]+$/;
 
 type StringRuleOptions = {
   minLength?: number;
@@ -66,6 +67,14 @@ export function requiredEmail(formData: FormData, key: string) {
   const value = requiredText(formData, key, { maxLength: 255 }).toLowerCase();
   if (!SIMPLE_EMAIL_PATTERN.test(value)) {
     throw new Error(`Field "${key}" must be a valid email address.`);
+  }
+  return value;
+}
+
+export function requiredPhone(formData: FormData, key: string) {
+  const value = requiredText(formData, key, { minLength: 6, maxLength: 50 });
+  if (!PHONE_PATTERN.test(value)) {
+    throw new Error(`Field "${key}" may only contain numbers, spaces, +, -, dots, and parentheses.`);
   }
   return value;
 }

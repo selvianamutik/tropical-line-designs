@@ -9,6 +9,7 @@ import { useAdminToast } from "@/components/admin/admin-toast";
 import { Button } from "@/components/admin/ui/Button";
 import { Input } from "@/components/admin/ui/Input";
 import { Modal } from "@/components/admin/ui/Modal";
+import { IMAGE_UPLOAD_ACCEPT, IMAGE_UPLOAD_HELP_TEXT, validateImageFile } from "@/lib/admin/image-validation";
 import type { PortfolioGalleryItemRecord, PortfolioRecord } from "@/lib/admin/types";
 
 type ProjectGalleryDialogProps = {
@@ -87,6 +88,9 @@ export function ProjectGalleryDialog({ project, portfolioGalleryItems }: Project
     setPortfolioGalleryItemState(portfolioGalleryItems);
     setDraggedId(null);
     setSelectedFile(null);
+    if (selectedFilePreviewUrl) {
+      URL.revokeObjectURL(selectedFilePreviewUrl);
+    }
     setSelectedFilePreviewUrl(null);
     setErrorMessage(null);
   };
@@ -245,14 +249,31 @@ export function ProjectGalleryDialog({ project, portfolioGalleryItems }: Project
                 </label>
                 <Input
                   type="file"
-                  accept="image/jpeg,image/png,image/webp,image/avif"
+                  accept={IMAGE_UPLOAD_ACCEPT}
                   onChange={(event) => {
                     const file = event.target.files?.[0] ?? null;
+                    setErrorMessage(null);
                     if (selectedFilePreviewUrl) {
                       URL.revokeObjectURL(selectedFilePreviewUrl);
                     }
+
+                    if (!file) {
+                      setSelectedFile(null);
+                      setSelectedFilePreviewUrl(null);
+                      return;
+                    }
+
+                    const validation = validateImageFile(file);
+                    if (!validation.valid) {
+                      event.target.value = "";
+                      setSelectedFile(null);
+                      setSelectedFilePreviewUrl(null);
+                      setErrorMessage(validation.message);
+                      return;
+                    }
+
                     setSelectedFile(file);
-                    setSelectedFilePreviewUrl(file ? URL.createObjectURL(file) : null);
+                    setSelectedFilePreviewUrl(URL.createObjectURL(file));
                   }}
                 />
                 {selectedFilePreviewUrl ? (
@@ -280,7 +301,7 @@ export function ProjectGalleryDialog({ project, portfolioGalleryItems }: Project
                   </button>
                 ) : null}
                 <p className="text-[11px] text-[#8a867f]">
-                  Upload JPG, PNG, WebP, atau AVIF hingga 10MB. File akan dikonversi otomatis ke WebP.
+                  {IMAGE_UPLOAD_HELP_TEXT}
                 </p>
               </div>
               <Button

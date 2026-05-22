@@ -10,6 +10,7 @@ type ProjectFact = {
 type HeroContentProps = {
   title: string;
   facts: ProjectFact[];
+  projectHref: string;
   layout?: "bottom-left" | "center" | "top-right" | "split";
 };
 
@@ -27,7 +28,7 @@ const fadeInProps = {
   transition: { duration: 0.7, ease: "easeOut" },
 } as const;
 
-export function HeroContent({ title, facts, layout = "bottom-left" }: HeroContentProps) {
+export function HeroContent({ title, facts, projectHref, layout = "bottom-left" }: HeroContentProps) {
   const containerStyles = {
     "bottom-left": "justify-end items-start",
     "center": "justify-center items-center text-center",
@@ -118,7 +119,7 @@ export function HeroContent({ title, facts, layout = "bottom-left" }: HeroConten
           </div>
 
           <Link
-            href="#progress"
+            href={projectHref}
             className="group inline-flex w-fit flex-col items-start self-start lg:mb-[6px] lg:self-auto"
           >
             <span className="mb-[10px] h-[2px] w-[42px] bg-white transition-transform duration-300 group-hover:scale-x-110" />

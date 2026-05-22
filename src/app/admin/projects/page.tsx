@@ -40,7 +40,6 @@ export default async function ProjectManagerPage() {
               ]
             },
             { name: "commenced_at", label: "Commenced Date", type: "month" },
-            { name: "display_order", label: "Display Order", type: "number", defaultValue: 0, min: 0 },
             { name: "client", label: "Client", placeholder: "e.g. Private Client" },
             {
               name: "category",
@@ -57,30 +56,12 @@ export default async function ProjectManagerPage() {
             { name: "landscape_consultant", label: "Landscape Consultant", placeholder: "e.g. Bensley Design Studio" },
             { name: "project_size", label: "Project Size", placeholder: "e.g. 2.1 ha" },
             {
-              name: "gallery_layout",
-              label: "Gallery Layout",
-              type: "select",
-              required: true,
-              defaultValue: "D",
-              options: [
-                { label: "Layout A", value: "A" },
-                { label: "Layout B", value: "B" },
-                { label: "Layout C", value: "C" },
-                { label: "Layout D", value: "D" },
-                { label: "Layout E", value: "E" },
-                { label: "Layout F", value: "F" },
-                { label: "Layout G", value: "G" },
-                { label: "Layout H", value: "H" },
-                { label: "Layout I", value: "I" },
-                { label: "Layout J", value: "J" },
-              ],
-            },
-            {
               name: "image_file",
               label: "Cover Image",
               type: "file",
-              accept: "image/jpeg,image/png,image/webp,image/avif",
-              helpText: "Upload a JPG, PNG, WebP, or AVIF image up to 10MB. File will be converted to WebP automatically.",
+              required: true,
+              accept: "image/jpeg,image/png,image/webp",
+              helpText: "Upload cover image.",
             },
             { name: "description", label: "Description", type: "textarea", placeholder: "Project summary..." },
           ]}

@@ -20,19 +20,6 @@ type AdminProjectsTableProps = {
   portfolioGalleryItems: PortfolioGalleryItemRecord[];
 };
 
-const galleryLayoutOptions = [
-  { label: "Layout A", value: "A" },
-  { label: "Layout B", value: "B" },
-  { label: "Layout C", value: "C" },
-  { label: "Layout D", value: "D" },
-  { label: "Layout E", value: "E" },
-  { label: "Layout F", value: "F" },
-  { label: "Layout G", value: "G" },
-  { label: "Layout H", value: "H" },
-  { label: "Layout I", value: "I" },
-  { label: "Layout J", value: "J" },
-] as const;
-
 const statusOptions = [
   { label: "Planning", value: "Planning" },
   { label: "Design", value: "Design" },
@@ -274,7 +261,6 @@ export function AdminProjectsTable({ projects, portfolioGalleryItems }: AdminPro
                         options: [...statusOptions],
                       },
                       { name: "commenced_at", label: "Commenced Date", type: "month", defaultValue: toMonthInputValue(project.commenced_at) },
-                      { name: "display_order", label: "Display Order", type: "number", min: 0, defaultValue: project.display_order ?? 0 },
                       { name: "client", label: "Client", defaultValue: project.client },
                       {
                         name: "category",
@@ -287,18 +273,10 @@ export function AdminProjectsTable({ projects, portfolioGalleryItems }: AdminPro
                       { name: "landscape_consultant", label: "Landscape Consultant", defaultValue: project.landscape_consultant },
                       { name: "project_size", label: "Project Size", defaultValue: project.project_size },
                       {
-                        name: "gallery_layout",
-                        label: "Gallery Layout",
-                        type: "select",
-                        required: true,
-                        defaultValue: project.gallery_layout,
-                        options: [...galleryLayoutOptions],
-                      },
-                      {
                         name: "image_file",
                         label: "Cover Image",
                         type: "file",
-                        accept: "image/jpeg,image/png,image/webp,image/avif",
+                        accept: "image/jpeg,image/png,image/webp",
                         currentMediaUrl: project.image_public_url,
                         helpText: project.image_public_url
                           ? "Leave empty to keep the current image. New uploads will be converted to WebP automatically."

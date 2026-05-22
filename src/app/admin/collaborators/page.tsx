@@ -30,8 +30,8 @@ export default async function CollaboratorsPage() {
               name: "image_file",
               label: "Collaborator Image",
               type: "file",
-              accept: "image/jpeg,image/png,image/webp,image/avif",
-              helpText: "Upload a JPG, PNG, WebP, or AVIF image up to 10MB. File will be converted to WebP automatically.",
+              accept: "image/jpeg,image/png,image/webp",
+              helpText: "Upload collaborator image.",
             },
           ]}
         />
@@ -79,7 +79,7 @@ export default async function CollaboratorsPage() {
                           name: "image_file",
                           label: "Collaborator Image",
                           type: "file",
-                          accept: "image/jpeg,image/png,image/webp,image/avif",
+                          accept: "image/jpeg,image/png,image/webp",
                           currentMediaUrl: collaborator.image_public_url,
                           helpText: collaborator.image_public_url
                             ? "Leave empty to keep the current image. New uploads will be converted to WebP automatically."

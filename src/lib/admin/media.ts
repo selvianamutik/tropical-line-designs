@@ -1,9 +1,12 @@
 import sharp from "sharp";
 import { createClient } from "@/lib/supabase/server";
+import {
+  MAX_IMAGE_UPLOAD_SIZE_BYTES,
+  MAX_IMAGE_UPLOAD_SIZE_LABEL,
+  validateImageFile,
+} from "@/lib/admin/image-validation";
 
 const MEDIA_BUCKET = "site-media";
-const MAX_IMAGE_SIZE_BYTES = 10 * 1024 * 1024;
-const ALLOWED_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp", "image/avif"]);
 
 type MediaOwner =
   | "portfolios"
@@ -59,25 +62,56 @@ async function nextImageIndex(supabase: Awaited<ReturnType<typeof createClient>>
   return (data ?? []).filter((item) => item.id).length + 1;
 }
 
-export function getOptionalImageFile(formData: FormData, key: string) {
+function isJpeg(bytes: Uint8Array) {
+  return bytes.length >= 3 && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff;
+}
+
+function isPng(bytes: Uint8Array) {
+  const signature = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
+  return signature.every((byte, index) => bytes[index] === byte);
+}
+
+function isWebp(bytes: Uint8Array) {
+  if (bytes.length < 12) {
+    return false;
+  }
+
+  const riff = String.fromCharCode(...bytes.slice(0, 4));
+  const webp = String.fromCharCode(...bytes.slice(8, 12));
+  return riff === "RIFF" && webp === "WEBP";
+}
+
+async function assertImageSignature(file: File, key: string) {
+  const header = new Uint8Array(await file.slice(0, 12).arrayBuffer());
+  const hasValidSignature = isJpeg(header) || isPng(header) || isWebp(header);
+
+  if (!hasValidSignature) {
+    throw new Error(`Field "${key}" must contain a valid JPG, JPEG, PNG, or WebP image file.`);
+  }
+}
+
+export async function getOptionalImageFile(formData: FormData, key: string) {
   const value = formData.get(key);
   if (!(value instanceof File) || value.size === 0) {
     return null;
   }
 
-  if (!ALLOWED_IMAGE_TYPES.has(value.type)) {
-    throw new Error(`Field "${key}" must be a JPEG, PNG, WebP, or AVIF image.`);
+  const validation = validateImageFile(value);
+  if (!validation.valid) {
+    throw new Error(`Field "${key}": ${validation.message}`);
   }
 
-  if (value.size > MAX_IMAGE_SIZE_BYTES) {
-    throw new Error(`Field "${key}" must be 10MB or smaller.`);
-  }
+  await assertImageSignature(value, key);
 
   return value;
 }
 
 async function convertImageToWebp(file: File) {
   const inputBuffer = Buffer.from(await file.arrayBuffer());
+  if (inputBuffer.byteLength > MAX_IMAGE_UPLOAD_SIZE_BYTES) {
+    throw new Error(`Uploaded image must be ${MAX_IMAGE_UPLOAD_SIZE_LABEL} or smaller.`);
+  }
+
   const outputBuffer = await sharp(inputBuffer, { animated: false })
     .rotate()
     .webp({ quality: 82, effort: 6 })
@@ -93,7 +127,6 @@ async function convertImageToWebp(file: File) {
 
 export async function uploadEntityImage({
   owner,
-  recordId,
   slugSource,
   file,
 }: {
@@ -152,7 +185,6 @@ export function emptyImageColumns(): EmptyStoredImage {
 }
 
 export async function uploadPortfolioGalleryAsset({
-  portfolioId,
   slugSource,
   file,
 }: {

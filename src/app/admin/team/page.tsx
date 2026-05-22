@@ -26,8 +26,8 @@ export default async function TeamDirectoryPage() {
               name: "image_file",
               label: "Profile Photo",
               type: "file",
-              accept: "image/jpeg,image/png,image/webp,image/avif",
-              helpText: "Upload a JPG, PNG, WebP, or AVIF image up to 10MB. File will be converted to WebP automatically.",
+              accept: "image/jpeg,image/png,image/webp",
+              helpText: "Upload profile photo.",
             },
             { 
               name: "status", 

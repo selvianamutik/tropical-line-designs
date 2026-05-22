@@ -100,7 +100,7 @@ export function TeamDirectoryTable({ members }: { members: TeamMemberRecord[] })
                         name: "image_file",
                         label: "Profile Photo",
                         type: "file",
-                        accept: "image/jpeg,image/png,image/webp,image/avif",
+                        accept: "image/jpeg,image/png,image/webp",
                         currentMediaUrl: member.image_public_url,
                         helpText: member.image_public_url
                           ? "Leave empty to keep the current photo. New uploads will be converted to WebP automatically."

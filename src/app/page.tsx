@@ -20,6 +20,7 @@ export default async function HomePage() {
     }
 
     return {
+      slug: project.slug,
       title: project.title,
       layout: "bottom-left",
       image: project.image,

@@ -1,29 +1,27 @@
 "use client";
 
-import { useState } from "react";
+import { useRouter } from "next/navigation";
 import type { PublicProjectRecord } from "@/lib/public/projects";
 import { ProjectOverlay } from "./project-overlay";
 
 type ProjectsGridPageProps = {
   projects: PublicProjectRecord[];
+  selectedProjectSlug?: string;
 };
 
 type ProjectHoverCardProps = {
   title: string;
   location: string;
   projectType: string;
-  onClick?: () => void;
 };
 
 function ProjectHoverCard({
   title,
   location,
   projectType,
-  onClick,
 }: ProjectHoverCardProps) {
   return (
     <div 
-      onClick={onClick}
       className="absolute inset-0 z-10 cursor-pointer bg-[linear-gradient(180deg,rgba(249,245,238,0.42)_0%,rgba(244,238,228,0.86)_38%,rgba(236,229,218,0.97)_100%)] p-4 text-[#2e2924] opacity-0 shadow-[0_20px_45px_rgba(29,23,16,0.16)] backdrop-blur-[2px] transition-all duration-500 ease-out group-hover:opacity-100 sm:p-5"
     >
       <div className="flex h-full flex-col justify-between">
@@ -53,7 +51,11 @@ function ProjectHoverCard({
 
 function ProjectGridCard({ project, onClick }: { project: PublicProjectRecord; onClick: () => void }) {
   return (
-    <article className="group relative h-[150px] overflow-hidden rounded-[3px] bg-[#ddd]">
+    <button
+      type="button"
+      onClick={onClick}
+      className="group relative block h-[150px] w-full overflow-hidden rounded-[3px] bg-[#ddd] text-left"
+    >
       <div
         className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-transform duration-700 ease-out group-hover:scale-[1.02]"
         style={{ backgroundImage: `url("${project.image}")` }}
@@ -64,23 +66,36 @@ function ProjectGridCard({ project, onClick }: { project: PublicProjectRecord; o
         title={project.title}
         location={project.location}
         projectType={project.type}
-        onClick={onClick}
       />
-    </article>
+    </button>
   );
 }
 
-export function ProjectsGridPage({ projects }: ProjectsGridPageProps) {
-  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+function getProjectPath(slug: string) {
+  return `/projects/${encodeURIComponent(slug)}`;
+}
+
+export function ProjectsGridPage({ projects, selectedProjectSlug }: ProjectsGridPageProps) {
+  const router = useRouter();
+  const selectedIndex = selectedProjectSlug
+    ? projects.findIndex((project) => project.slug === selectedProjectSlug)
+    : -1;
+  const selectedProject = selectedIndex >= 0 ? projects[selectedIndex] : null;
+
+  const openProject = (slug: string) => {
+    router.push(getProjectPath(slug));
+  };
 
   const handleNext = () => {
-    if (selectedIndex === null) return;
-    setSelectedIndex((selectedIndex + 1) % projects.length);
+    if (selectedIndex < 0 || projects.length === 0) return;
+    const nextProject = projects[(selectedIndex + 1) % projects.length];
+    openProject(nextProject.slug);
   };
 
   const handlePrev = () => {
-    if (selectedIndex === null) return;
-    setSelectedIndex((selectedIndex - 1 + projects.length) % projects.length);
+    if (selectedIndex < 0 || projects.length === 0) return;
+    const previousProject = projects[(selectedIndex - 1 + projects.length) % projects.length];
+    openProject(previousProject.slug);
   };
 
   return (
@@ -91,25 +106,25 @@ export function ProjectsGridPage({ projects }: ProjectsGridPageProps) {
         </h1>
 
         <div className="grid grid-cols-1 gap-x-7 gap-y-6 sm:grid-cols-2 lg:grid-cols-4">
-          {projects.map((project, index) => (
+          {projects.map((project) => (
             <ProjectGridCard 
               key={project.slug} 
               project={project} 
-              onClick={() => setSelectedIndex(index)}
+              onClick={() => openProject(project.slug)}
             />
           ))}
         </div>
       </div>
 
-      {selectedIndex !== null && (
+      {selectedProject ? (
         <ProjectOverlay 
-          project={projects[selectedIndex]}
-          isOpen={selectedIndex !== null}
-          onClose={() => setSelectedIndex(null)}
+          project={selectedProject}
+          isOpen
+          onClose={() => router.push("/projects")}
           onNext={handleNext}
           onPrev={handlePrev}
         />
-      )}
+      ) : null}
     </section>
   );
 }
