@@ -29,6 +29,28 @@ function revalidatePublicProjectPaths() {
   revalidatePath("/projects");
 }
 
+function getActionErrorMessage(error: unknown) {
+  if (error instanceof Error && error.message) {
+    return error.message;
+  }
+
+  if (typeof error === "object" && error !== null && "message" in error) {
+    const message = (error as { message?: unknown }).message;
+    if (typeof message === "string" && message.trim()) {
+      return message;
+    }
+  }
+
+  return "Terjadi kesalahan tidak dikenal.";
+}
+
+type AdminActionResult = {
+  ok: true;
+} | {
+  ok: false;
+  message: string;
+};
+
 async function buildUniquePortfolioSlug(
   supabase: Awaited<ReturnType<typeof requireAdmin>>["supabase"],
   title: string,
@@ -468,67 +490,90 @@ export async function updatePortfolioGalleryOrder(formData: FormData) {
   revalidatePath("/admin/projects");
 }
 
-export async function addPortfolioGalleryImage(formData: FormData) {
+export async function addPortfolioGalleryImage(formData: FormData): Promise<AdminActionResult> {
   const { supabase } = await requireAdmin();
-  const portfolioId = requiredText(formData, "portfolio_id", { maxLength: 64 });
-  const title = requiredText(formData, "portfolio_title", { maxLength: 160 });
-  const imageFile = await getOptionalImageFile(formData, "image_file");
 
-  if (!imageFile) {
-    throw new Error('Field "image_file" is required.');
+  try {
+    const portfolioId = requiredText(formData, "portfolio_id", { maxLength: 64 });
+    const title = requiredText(formData, "portfolio_title", { maxLength: 160 });
+    const imageFile = await getOptionalImageFile(formData, "image_file");
+
+    if (!imageFile) {
+      throw new Error('Field "image_file" is required.');
+    }
+
+    const { data: portfolio, error: portfolioError } = await supabase
+      .from("portfolios")
+      .select("id")
+      .eq("id", portfolioId)
+      .maybeSingle();
+
+    if (portfolioError) {
+      throw new Error(`Gagal memvalidasi project galeri: ${getActionErrorMessage(portfolioError)}`);
+    }
+
+    if (!portfolio) {
+      throw new Error("Project tidak ditemukan.");
+    }
+
+    const { data: existingItems, error: existingError } = await supabase
+      .from("portfolio_gallery_items")
+      .select("sort_order")
+      .eq("portfolio_id", portfolioId)
+      .order("sort_order", { ascending: false })
+      .limit(1);
+
+    if (existingError) {
+      throw new Error(`Gagal membaca urutan galeri saat ini: ${getActionErrorMessage(existingError)}`);
+    }
+
+    const nextSortOrder = (existingItems?.[0]?.sort_order ?? -1) + 1;
+    let uploaded: Awaited<ReturnType<typeof uploadPortfolioGalleryAsset>>;
+
+    try {
+      uploaded = await uploadPortfolioGalleryAsset({
+        portfolioId,
+        slugSource: title,
+        file: imageFile,
+      });
+    } catch (error) {
+      throw new Error(`Gagal mengunggah foto galeri ke storage: ${getActionErrorMessage(error)}`);
+    }
+
+    const { error: galleryError } = await supabase
+      .from("portfolio_gallery_items")
+      .insert({
+        portfolio_id: portfolioId,
+        media_asset_id: uploaded.mediaAssetId,
+        sort_order: nextSortOrder,
+        caption: null,
+      });
+
+    if (galleryError) {
+      const message = getActionErrorMessage(galleryError);
+
+      try {
+        await supabase.from("media_assets").delete().eq("id", uploaded.mediaAssetId);
+        await removeEntityImage(uploaded.objectPath);
+      } catch (cleanupError) {
+        console.error("Failed to clean up uploaded gallery image after database insert error.", cleanupError);
+      }
+
+      throw new Error(`Gagal menyimpan data foto galeri: ${message}`);
+    }
+
+    revalidatePath("/");
+    revalidatePath("/projects");
+    revalidatePath("/admin");
+    revalidatePath("/admin/projects");
+
+    return { ok: true };
+  } catch (error) {
+    return {
+      ok: false,
+      message: getActionErrorMessage(error),
+    };
   }
-
-  const { data: portfolio, error: portfolioError } = await supabase
-    .from("portfolios")
-    .select("id")
-    .eq("id", portfolioId)
-    .maybeSingle();
-
-  if (portfolioError) {
-    throw portfolioError;
-  }
-
-  if (!portfolio) {
-    throw new Error("Project not found.");
-  }
-
-  const { data: existingItems, error: existingError } = await supabase
-    .from("portfolio_gallery_items")
-    .select("sort_order")
-    .eq("portfolio_id", portfolioId)
-    .order("sort_order", { ascending: false })
-    .limit(1);
-
-  if (existingError) {
-    throw existingError;
-  }
-
-  const nextSortOrder = (existingItems?.[0]?.sort_order ?? -1) + 1;
-  const uploaded = await uploadPortfolioGalleryAsset({
-    portfolioId,
-    slugSource: title,
-    file: imageFile,
-  });
-
-  const { error: galleryError } = await supabase
-    .from("portfolio_gallery_items")
-    .insert({
-      portfolio_id: portfolioId,
-      media_asset_id: uploaded.mediaAssetId,
-      sort_order: nextSortOrder,
-      caption: null,
-    });
-
-  if (galleryError) {
-    await supabase.from("media_assets").delete().eq("id", uploaded.mediaAssetId);
-    await removeEntityImage(uploaded.objectPath);
-    throw galleryError;
-  }
-
-  revalidatePath("/");
-  revalidatePath("/projects");
-  revalidatePath("/admin");
-  revalidatePath("/admin/projects");
 }
 
 export async function deletePortfolioGalleryImage(formData: FormData) {

@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import { GripVertical, Images, Trash2, Upload } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { addPortfolioGalleryImage, deletePortfolioGalleryImage, updatePortfolioGalleryOrder } from "@/app/admin/actions";
@@ -35,6 +35,20 @@ function isSupabaseStorageUrl(value: string) {
   return value.includes(".supabase.co/storage/v1/object/public/");
 }
 
+function getActionMessage(error: unknown, fallback: string) {
+  const message = error instanceof Error ? error.message : "";
+
+  if (!message) {
+    return fallback;
+  }
+
+  if (message.includes("An error occurred in the Server Components render")) {
+    return `${fallback} Detail error disembunyikan oleh production build. Cek log server untuk penyebab asli.`;
+  }
+
+  return message;
+}
+
 export function ProjectGalleryDialog({ project, portfolioGalleryItems }: ProjectGalleryDialogProps) {
   const router = useRouter();
   const { showToast } = useAdminToast();
@@ -53,6 +67,10 @@ export function ProjectGalleryDialog({ project, portfolioGalleryItems }: Project
     () => portfolioGalleryItemState.some((item, index) => item.id !== portfolioGalleryItems[index]?.id),
     [portfolioGalleryItemState, portfolioGalleryItems],
   );
+
+  useEffect(() => {
+    setPortfolioGalleryItemState(portfolioGalleryItems);
+  }, [portfolioGalleryItems]);
   // const [showDebug, setShowDebug] = useState(false);
 
   // const debugSnapshot = useMemo(() => ({
@@ -111,7 +129,7 @@ export function ProjectGalleryDialog({ project, portfolioGalleryItems }: Project
         router.refresh();
         setIsOpen(false);
       } catch (error) {
-        const message = error instanceof Error ? error.message : "Gagal menyimpan urutan galeri.";
+        const message = getActionMessage(error, "Gagal menyimpan urutan galeri.");
         setErrorMessage(message);
         showToast({
           tone: "error",
@@ -133,16 +151,24 @@ export function ProjectGalleryDialog({ project, portfolioGalleryItems }: Project
     startUploadTransition(async () => {
       try {
         setErrorMessage(null);
-        await addPortfolioGalleryImage(formData);
+        const result = await addPortfolioGalleryImage(formData);
+        if (!result.ok) {
+          throw new Error(result.message);
+        }
+
         showToast({
           tone: "success",
           title: "Foto galeri berhasil diunggah.",
         });
         router.refresh();
         setSelectedFile(null);
+        if (selectedFilePreviewUrl) {
+          URL.revokeObjectURL(selectedFilePreviewUrl);
+        }
+        setSelectedFilePreviewUrl(null);
         setIsOpen(false);
       } catch (error) {
-        const message = error instanceof Error ? error.message : "Gagal mengunggah foto galeri.";
+        const message = getActionMessage(error, "Gagal mengunggah foto galeri.");
         setErrorMessage(message);
         showToast({
           tone: "error",
@@ -171,7 +197,7 @@ export function ProjectGalleryDialog({ project, portfolioGalleryItems }: Project
         router.refresh();
         setIsOpen(false);
       } catch (error) {
-        const message = error instanceof Error ? error.message : "Gagal menghapus foto galeri.";
+        const message = getActionMessage(error, "Gagal menghapus foto galeri.");
         setErrorMessage(message);
         showToast({
           tone: "error",

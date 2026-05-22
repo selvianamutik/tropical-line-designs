@@ -48,6 +48,12 @@ function buildInitials(value: string) {
   return initials || "img";
 }
 
+function buildUniqueImageFilename(slugSource: string, extension: string) {
+  const timestamp = Date.now().toString(36);
+  const random = crypto.randomUUID().replace(/-/g, "").slice(0, 10);
+  return `${buildInitials(slugSource)}-${timestamp}-${random}.${extension}`;
+}
+
 async function nextImageIndex(supabase: Awaited<ReturnType<typeof createClient>>, folderPath: string) {
   const prefix = folderPath;
   const { data, error } = await supabase.storage.from(MEDIA_BUCKET).list(prefix, {
@@ -185,6 +191,7 @@ export function emptyImageColumns(): EmptyStoredImage {
 }
 
 export async function uploadPortfolioGalleryAsset({
+  portfolioId,
   slugSource,
   file,
 }: {
@@ -194,11 +201,10 @@ export async function uploadPortfolioGalleryAsset({
 }) {
   const supabase = await createClient();
   const slug = sanitizeSegment(slugSource) || "portfolio-gallery";
+  const projectSegment = sanitizeSegment(portfolioId) || "project";
   const convertedImage = await convertImageToWebp(file);
-  const folderPath = `portfolio-gallery/${slug}`;
-  const initials = buildInitials(slugSource);
-  const index = await nextImageIndex(supabase, folderPath);
-  const objectPath = `${folderPath}/${initials}-${index}.${convertedImage.extension}`;
+  const folderPath = `portfolio-gallery/${projectSegment}/${slug}`;
+  const objectPath = `${folderPath}/${buildUniqueImageFilename(slugSource, convertedImage.extension)}`;
 
   const { error: uploadError } = await supabase.storage
     .from(MEDIA_BUCKET)
