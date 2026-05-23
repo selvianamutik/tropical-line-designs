@@ -168,10 +168,11 @@ export function AdminSettingsForm({
         setFieldErrors(nextFieldErrors);
 
         if (Object.keys(nextFieldErrors).length > 0) {
+          const allErrors = Object.values(nextFieldErrors);
           showToast({
             tone: "error",
             title: "Input belum valid.",
-            description: "Periksa kembali field yang ditandai sebelum menyimpan.",
+            description: allErrors[0] || "Periksa kembali field yang ditandai sebelum menyimpan.",
           });
           return;
         }

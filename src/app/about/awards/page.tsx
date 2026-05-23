@@ -19,9 +19,6 @@ export default async function AboutAwardsPage() {
                 {award.year}
               </span>
             </div>
-            <p className="text-sm font-light text-neutral-500 leading-relaxed min-h-[4rem] font-inter">
-              {award.description ?? award.organization}
-            </p>
             <div className="relative w-full aspect-[4/3] bg-neutral-100 mt-2">
               <Image
                 src={award.image}
