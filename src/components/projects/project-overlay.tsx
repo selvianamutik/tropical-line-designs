@@ -15,10 +15,6 @@ interface ProjectOverlayProps {
   showImageOrderLabels?: boolean;
 }
 
-function isSupabaseStorageUrl(value: string) {
-  return value.includes(".supabase.co/storage/v1/object/public/");
-}
-
 function ImageOrderBadge({ index }: { index: number }) {
   return (
     <div className="absolute left-3 top-3 z-20 flex h-8 min-w-8 items-center justify-center rounded-full bg-[#d97706] px-2 text-[11px] font-bold text-white shadow-lg ring-2 ring-white/90">
@@ -31,12 +27,14 @@ function ProjectImage({
   src,
   alt,
   priority = false,
+  sizes = "100vw",
   orderIndex,
   showOrderLabel = false,
 }: {
   src: string;
   alt: string;
   priority?: boolean;
+  sizes?: string;
   orderIndex?: number;
   showOrderLabel?: boolean;
 }) {
@@ -47,9 +45,9 @@ function ProjectImage({
         src={src}
         alt={alt}
         fill
+        sizes={sizes}
         className="object-cover"
         priority={priority}
-        unoptimized={isSupabaseStorageUrl(src)}
       />
     </>
   );
@@ -110,7 +108,7 @@ export function ProjectOverlay({
           layoutId={`image-${project.slug}`}
           className="relative min-h-screen bg-[#f8f3ea]"
         >
-          <ProjectImage src={project.image} alt={project.title} priority orderIndex={0} showOrderLabel={showImageOrderLabels} />
+          <ProjectImage src={project.image} alt={project.title} priority sizes="100vw" orderIndex={0} showOrderLabel={showImageOrderLabels} />
           <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,0.08)_0%,rgba(0,0,0,0.12)_38%,rgba(0,0,0,0.68)_100%)]" />
           <div className="absolute inset-x-0 bottom-0 z-10 px-6 pb-24 text-white sm:px-10 md:px-16 lg:px-20">
             <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-white/70">{project.location}</p>
@@ -193,7 +191,13 @@ export function ProjectOverlay({
             <div className="flex flex-col gap-4">
               {images.map((img, i) => (
                 <div key={`${img}-${i}`} className="relative aspect-video w-full overflow-hidden rounded-sm bg-[#e8dfd2]">
-                  <ProjectImage src={img} alt={`${project.title} ${i + 1}`} orderIndex={i} showOrderLabel={showImageOrderLabels} />
+                  <ProjectImage
+                    src={img}
+                    alt={`${project.title} ${i + 1}`}
+                    sizes="(min-width: 1280px) 1280px, calc(100vw - 32px)"
+                    orderIndex={i}
+                    showOrderLabel={showImageOrderLabels}
+                  />
                 </div>
               ))}
             </div>

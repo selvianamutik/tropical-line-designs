@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import type { PublicProjectRecord } from "@/lib/public/projects";
 import { ProjectOverlay } from "./project-overlay";
@@ -49,16 +50,28 @@ function ProjectHoverCard({
   );
 }
 
-function ProjectGridCard({ project, onClick }: { project: PublicProjectRecord; onClick: () => void }) {
+function ProjectGridCard({
+  project,
+  onClick,
+  priority = false,
+}: {
+  project: PublicProjectRecord;
+  onClick: () => void;
+  priority?: boolean;
+}) {
   return (
     <button
       type="button"
       onClick={onClick}
       className="group relative block h-[150px] w-full overflow-hidden rounded-[3px] bg-[#ddd] text-left"
     >
-      <div
-        className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-transform duration-700 ease-out group-hover:scale-[1.02]"
-        style={{ backgroundImage: `url("${project.image}")` }}
+      <Image
+        src={project.image}
+        alt={project.title}
+        fill
+        sizes="(min-width: 1024px) 245px, (min-width: 640px) 45vw, calc(100vw - 48px)"
+        className="object-cover transition-transform duration-700 ease-out group-hover:scale-[1.02]"
+        priority={priority}
       />
       <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,0.02)_0%,rgba(0,0,0,0.08)_100%)] transition-colors duration-500 group-hover:bg-[linear-gradient(180deg,rgba(0,0,0,0.06)_0%,rgba(0,0,0,0.22)_100%)]" />
 
@@ -106,10 +119,11 @@ export function ProjectsGridPage({ projects, selectedProjectSlug }: ProjectsGrid
         </h1>
 
         <div className="grid grid-cols-1 gap-x-7 gap-y-6 sm:grid-cols-2 lg:grid-cols-4">
-          {projects.map((project) => (
+          {projects.map((project, index) => (
             <ProjectGridCard 
               key={project.slug} 
               project={project} 
+              priority={index < 4}
               onClick={() => openProject(project.slug)}
             />
           ))}
