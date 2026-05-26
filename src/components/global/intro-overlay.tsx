@@ -141,7 +141,7 @@ export function IntroOverlay() {
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1] }}
-                className="mx-auto mb-6 flex w-[90px] flex-col items-center justify-center"
+                className="mx-auto mb-6 flex w-20 md:w-[90px] flex-col items-center justify-center"
               >
                 <div className="relative mb-4 aspect-square w-full">
                   <Image
@@ -178,7 +178,7 @@ export function IntroOverlay() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1], delay: 0.5 }}
-                  className="relative mx-auto mt-8 h-[120px] w-full max-w-[300px]"
+                  className="relative mx-auto mt-8 h-16 md:h-[120px] w-full max-w-[300px]"
                 >
                   <Image
                     src="/logo/logo-2(white).png"
