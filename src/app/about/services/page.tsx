@@ -14,7 +14,7 @@ export default async function AboutServicesPage() {
     <div className="flex flex-col gap-12 pb-24">
       <div>
         <h1 className="text-5xl font-medium text-black md:text-6xl">SERVICES</h1>
-        <p className="mt-6 max-w-3xl font-inter text-lg font-light leading-relaxed text-neutral-600">
+        <p className="mt-6 max-w-3xl font-inter text-lg font-normal leading-relaxed text-neutral-600">
           Tropical Line Design focuses its landscape practice into design and build, carrying tropical landscape
           concepts from visual planning into built reality.
         </p>
@@ -33,7 +33,7 @@ export default async function AboutServicesPage() {
               <div>
                 <h2 className="text-2xl font-medium leading-tight text-black md:text-3xl">{service.title}</h2>
                 {service.description ? (
-                  <p className="mt-3 max-w-6xl font-inter text-base font-light leading-8 text-neutral-600">
+                  <p className="mt-3 max-w-6xl font-inter text-base font-normal leading-8 text-neutral-600">
                     {service.description}
                   </p>
                 ) : null}

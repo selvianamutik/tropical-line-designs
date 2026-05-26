@@ -19,7 +19,7 @@ export function AboutPhilosophy() {
           {studioData.philosophies.map((phil, idx) => (
             <div key={idx} className="flex flex-col gap-3">
               <h3 className="font-semibold text-neutral-900">{phil.title}</h3>
-              <p className="text-sm leading-relaxed text-neutral-600 font-light font-inter">
+              <p className="text-sm leading-relaxed text-neutral-600 font-normal font-inter">
                 {phil.description}
               </p>
             </div>

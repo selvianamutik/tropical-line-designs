@@ -85,7 +85,7 @@ export default async function ContactPage() {
                       rel="noreferrer"
                       className="flex items-center gap-1 transition-opacity hover:opacity-70"
                     >
-                      LinkedIn <span aria-hidden="true">&uarr;</span>
+                    Sources <span aria-hidden="true">&uarr;</span>
                     </a>
                   ) : null}
                 </div>

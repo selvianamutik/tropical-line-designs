@@ -14,17 +14,17 @@ export default async function AboutLayout({
   const settings = await getPublicSiteSettings();
 
   return (
-    <main className="min-h-screen bg-[#FDFBF7] flex flex-col relative">
+    <main className="min-h-screen bg-[#FDFBF7] flex flex-col relative border-2 border-black">
       <ScrollToTop />
       <SiteNav />
 
       <AboutHero imageUrl={settings.aboutPrincipalImageUrl} />
 
       {/* Main Content Area */}
-      <section className="flex-grow max-w-7xl mx-auto w-full px-6 md:px-12 lg:px-24 pt-36 pb-12 ">
+      <section className="flex-grow max-w-[90rem] mx-auto w-full px-6 md:px-12 lg:px-24 pt-36 pb-12 ">
         <div className="flex flex-col lg:flex-row gap-8 lg:gap-24 ">
           <AboutSidebar />
-          <div className="flex-grow max-w-4xl min-w-0">
+          <div className="flex-grow max-w-2xl mx-auto min-w-0">
             {children}
           </div>
         </div>

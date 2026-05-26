@@ -9,7 +9,7 @@ export default async function AboutStudioPage() {
   return (
     <div id="content" className="flex flex-col gap-12 font-sans scroll-mt-28">
       {/* Top Section: Image floats left, text wraps around it */}
-      <div className="text-neutral-600 leading-relaxed font-light text-[17px] font-inter text-justify pb-12">
+      <div className="text-neutral-600 leading-relaxed font-normal text-[17px] font-inter text-justify pb-12">
         {/* Float image so text wraps around it */}
         {principal ? (
           <div className="float-left mr-8 mb-4 w-[200px] md:w-[240px] flex-shrink-0">

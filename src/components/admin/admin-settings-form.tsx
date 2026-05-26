@@ -33,7 +33,7 @@ const settingsFields = [
   { name: "phone_number", label: "Phone Number", required: true },
   { name: "instagram_handle", label: "Instagram URL", type: "url" },
   { name: "office_address", label: "Office Address", type: "textarea", required: true },
-  { name: "linkedin_url", label: "LinkedIn URL", type: "url" },
+  { name: "linkedin_url", label: "Sources URL", type: "url" },
   { name: "footer_heading", label: "Footer Heading", type: "textarea", required: true },
   { name: "footer_description", label: "Footer Description", type: "textarea", required: true },
 ] satisfies AdminFormFieldValidation[];
@@ -274,12 +274,12 @@ export function AdminSettingsForm({
         </div>
 
         <div className="space-y-2">
-          <label className="text-[10px] font-bold tracking-[0.1em] text-[#8a867f] uppercase">LinkedIn URL</label>
+          <label className="text-[10px] font-bold tracking-[0.1em] text-[#8a867f] uppercase">Sources URL</label>
           <Input
             name="linkedin_url"
             type="url"
             defaultValue={values.linkedin_url}
-            placeholder="https://www.linkedin.com/company/..."
+            placeholder="https://..."
             aria-invalid={Boolean(fieldErrors.linkedin_url)}
             onChange={() => clearFieldError("linkedin_url")}
             {...getFieldAttributes("linkedin_url")}

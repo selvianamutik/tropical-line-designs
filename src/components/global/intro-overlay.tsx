@@ -1,7 +1,8 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import Image from "next/image";
 
 const INTRO_STORAGE_KEY = "has-seen-intro-v1";
 const INTRO_RESET_INTERVAL_MS = 5 * 60 * 1000;
@@ -135,24 +136,58 @@ export function IntroOverlay() {
           {/* Content Layer */}
           <div className="relative h-full w-full flex flex-col items-center justify-center px-6 text-center">
             <div className="max-w-4xl w-full">
-              {/* Decorative Line */}
+              {/* Image #1 (Logo Atas) */}
               <motion.div
-                initial={{ scaleX: 0 }}
-                animate={{ scaleX: 1 }}
-                transition={{ duration: 1.5, ease: "circOut" }}
-                className="h-[1px] w-24 bg-white/30 mx-auto mb-12"
-              />
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1] }}
+                className="mx-auto mb-6 flex w-[90px] flex-col items-center justify-center"
+              >
+                <div className="relative mb-4 aspect-square w-full">
+                  <Image
+                    src="/logo/logo-1.png"
+                    alt="Emblem Logo"
+                    fill
+                    className="object-contain"
+                    priority
+                  />
+                </div>
+
+                {/* Decorative line with same width as logo */}
+                <motion.div
+                  initial={{ scaleX: 0 }}
+                  animate={{ scaleX: 1 }}
+                  transition={{ duration: 1.5, ease: "circOut", delay: 0.2 }}
+                  className="h-[1px] w-full bg-white/30"
+                />
+              </motion.div>
 
               {/* Main Title */}
               <motion.div
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1] }}
-                className="space-y-4"
+                transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1], delay: 0.3 }}
+                className="space-y-8"
               >
                 <h1 className="text-5xl md:text-8xl font-light tracking-[-0.03em] text-white uppercase font-sans">
                   Tropical Line <span className="font-bold italic">Design</span>
                 </h1>
+                
+                {/* Image #2 (Logo Bawah) */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1], delay: 0.5 }}
+                  className="relative mx-auto mt-8 h-[120px] w-full max-w-[300px]"
+                >
+                  <Image
+                    src="/logo/logo-2(white).png"
+                    alt="Tropical Line Design wordmark"
+                    fill
+                    className="object-contain"
+                    priority
+                  />
+                </motion.div>
                 {/* <p className="text-sm md:text-base text-white/50 tracking-[0.5em] uppercase font-inter">
                   Integrated Corporate Identity
                 </p> */}

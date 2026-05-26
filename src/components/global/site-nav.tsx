@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
@@ -58,6 +58,9 @@ export function SiteNav({
     ? cn("bg-[#808080]/20 backdrop-blur-md text-white", isScrolled && "bg-[#808080]/20 backdrop-blur-sm text-slate-900")
     : "bg-[#FDF9F1]/20 backdrop-blur-sm text-slate-900";
 
+  const useWhiteLogo = isLandingPage && !isScrolled;
+  const logo2Src = useWhiteLogo ? "/logo/logo-2(white).png" : "/logo/logo-2(black).png";
+
   return (
     <>
       <nav
@@ -70,9 +73,29 @@ export function SiteNav({
         <div className="mx-auto flex w-full max-w-[1184px] items-baseline justify-between ">
            <Link
             href="/"
-            className="text-[23px] font-bold uppercase leading-none"
+            className="flex items-center gap-3 text-[23px] font-bold uppercase leading-none"
           >
-            Tropical Line Design
+            <div className="flex items-center gap-2 shrink-0">
+              <div className="relative h-8 w-8">
+                <Image
+                  src="/logo/logo-1.png"
+                  alt="Emblem Logo"
+                  fill
+                  className="object-contain"
+                  priority
+                />
+              </div>
+              <div className="relative h-8 w-[45px] ">
+                <Image
+                  src={logo2Src}
+                  alt="Wordmark Logo"
+                  fill
+                  className="object-contain scale-125"
+                  priority
+                />
+              </div>
+            </div>
+            <span>Tropical Line Design</span>
           </Link>
 
           <div className="hidden gap-10 sm:flex">
