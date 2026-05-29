@@ -2,13 +2,13 @@ import Script from 'next/script';
 
 interface StructuredDataProps {
   type: 'organization' | 'website' | 'breadcrumb' | 'project';
-  data?: Record<string, any>;
+  data?: Record<string, unknown>;
 }
 
 export function StructuredData({ type, data = {} }: StructuredDataProps) {
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://tropicallinedesigns.com';
 
-  const schemas: Record<string, any> = {
+  const schemas: Record<string, unknown> = {
     organization: {
       '@context': 'https://schema.org',
       '@type': 'Organization',
