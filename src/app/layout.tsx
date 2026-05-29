@@ -94,11 +94,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="id">
-      <head>
+      <body className={`${inter.variable} ${manrope.variable}`}>
         <StructuredData type="organization" />
         <StructuredData type="website" />
-      </head>
-      <body className={`${inter.variable} ${manrope.variable}`}>
         <IntroStorageReset />
         {children}
         <SpeedInsights />
