@@ -1,6 +1,20 @@
+import type { Metadata } from "next";
 import { TeamMemberPortrait } from "@/components/about/team-member-portrait";
 import { studioData } from "@/data/about";
 import { listPublicTeamMembers } from "@/lib/public/about";
+
+export const metadata: Metadata = {
+  title: "About Us - Tropical Line Designs",
+  description: "Founded in 1990 by Tamyani Adi Kusumo, Tropical Line Designs is a leading landscape architecture firm in Bali with 34+ years of experience in tropical resort and hotel design.",
+  alternates: {
+    canonical: "/about",
+  },
+  openGraph: {
+    title: "About Us - Tropical Line Designs",
+    description: "Founded in 1990 by Tamyani Adi Kusumo, Tropical Line Designs is a leading landscape architecture firm in Bali with 34+ years of experience.",
+    url: "/about",
+  },
+};
 
 export default async function AboutStudioPage() {
   const people = await listPublicTeamMembers();

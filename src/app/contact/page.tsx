@@ -1,8 +1,22 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import { MapClient } from "@/components/contact/map-client";
 import { ProjectsSimpleFooter } from "@/components/global/projects-simple-footer";
 import { SiteNav } from "@/components/global/site-nav";
 import { getPublicSiteSettings } from "@/lib/public/site-settings";
+
+export const metadata: Metadata = {
+  title: "Contact Us - Tropical Line Designs",
+  description: "Get in touch with Tropical Line Designs for your landscape architecture project. Based in Bali, Indonesia. Contact us for consultation on resort, hotel, and villa landscape design.",
+  alternates: {
+    canonical: "/contact",
+  },
+  openGraph: {
+    title: "Contact Us - Tropical Line Designs",
+    description: "Get in touch with Tropical Line Designs for your landscape architecture project in Bali, Indonesia.",
+    url: "/contact",
+  },
+};
 
 function isSupabaseStorageUrl(value: string) {
   return value.includes("/storage/v1/object/public/");
