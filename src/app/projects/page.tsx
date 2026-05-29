@@ -3,6 +3,7 @@ import { SiteNav } from "@/components/global/site-nav";
 import { ProjectsSimpleFooter } from "@/components/global/projects-simple-footer";
 import { ProjectsGridPage } from "@/components/projects/projects-grid-page";
 import { listPublicProjects } from "@/lib/public/projects";
+import { StructuredData } from "@/components/seo/StructuredData";
 
 export const metadata: Metadata = {
   title: "Projects Portfolio - Tropical Line Designs",
@@ -22,8 +23,26 @@ export const dynamic = "force-dynamic";
 export default async function ProjectsPage() {
   const projects = await listPublicProjects();
 
+  const breadcrumbData = {
+    items: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Home",
+        item: process.env.NEXT_PUBLIC_SITE_URL || "https://www.tropicallinedesign.com",
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "Projects",
+        item: `${process.env.NEXT_PUBLIC_SITE_URL || "https://www.tropicallinedesign.com"}/projects`,
+      },
+    ],
+  };
+
   return (
     <main className="min-h-screen bg-[#f8f3ea] text-slate-950">
+      <StructuredData type="breadcrumb" data={breadcrumbData} />
       <SiteNav
         className="sticky inset-x-0 top-0 z-30"
       />

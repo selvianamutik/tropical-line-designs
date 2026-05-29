@@ -4,6 +4,7 @@ import { SiteNav } from "@/components/global/site-nav";
 import { ProjectsSimpleFooter } from "@/components/global/projects-simple-footer";
 import { ProjectsGridPage } from "@/components/projects/projects-grid-page";
 import { listPublicProjects } from "@/lib/public/projects";
+import { StructuredData } from "@/components/seo/StructuredData";
 
 export const dynamic = "force-dynamic";
 
@@ -55,8 +56,43 @@ export default async function ProjectDetailPage({ params }: ProjectDetailPagePro
     notFound();
   }
 
+  const project = projects.find((p) => p.slug === slug);
+
+  const breadcrumbData = {
+    items: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Home",
+        item: process.env.NEXT_PUBLIC_SITE_URL || "https://www.tropicallinedesign.com",
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "Projects",
+        item: `${process.env.NEXT_PUBLIC_SITE_URL || "https://www.tropicallinedesign.com"}/projects`,
+      },
+      {
+        "@type": "ListItem",
+        position: 3,
+        name: project?.title || slug,
+        item: `${process.env.NEXT_PUBLIC_SITE_URL || "https://www.tropicallinedesign.com"}/projects/${slug}`,
+      },
+    ],
+  };
+
+  const projectData = project ? {
+    title: project.title,
+    description: project.description || '',
+    image: project.image || '',
+    location: project.location,
+    year: project.year || '',
+  } : undefined;
+
   return (
     <main className="min-h-screen bg-[#f8f3ea] text-slate-950">
+      <StructuredData type="breadcrumb" data={breadcrumbData} />
+      {projectData && <StructuredData type="project" data={projectData} />}
       <SiteNav
         className="sticky inset-x-0 top-0 z-30"
       />
