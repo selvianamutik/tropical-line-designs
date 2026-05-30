@@ -1,7 +1,24 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import { listPublicServices } from "@/lib/public/services";
+import { getAboutRouteMetadata } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
+
+const servicesMetadata = getAboutRouteMetadata("/about/services");
+
+export const metadata: Metadata = {
+  title: servicesMetadata?.title,
+  description: servicesMetadata?.description,
+  alternates: {
+    canonical: "/about/services",
+  },
+  openGraph: {
+    title: servicesMetadata?.title,
+    description: servicesMetadata?.description,
+    url: "/about/services",
+  },
+};
 
 function isSupabaseStorageUrl(value: string) {
   return value.includes("/storage/v1/object/public/");

@@ -1,4 +1,5 @@
 # Tropical Line Designs
+Canonical website: https://www.tropicallinedesign.com/
 > Premier landscape architecture firm specializing in tropical resort, hotel, and villa design in Bali, Indonesia since 1990
 
 ## About
@@ -36,9 +37,13 @@ Based in Bali, Indonesia - serving projects throughout Indonesia and internation
 - Full design-build services
 
 ## Contact
-Website: /contact
-Projects Portfolio: /projects
-About the Studio: /about
+Website: https://www.tropicallinedesign.com/contact
+Projects Portfolio: https://www.tropicallinedesign.com/projects
+About the Studio: https://www.tropicallinedesign.com/about
+Services: https://www.tropicallinedesign.com/about/services
+People: https://www.tropicallinedesign.com/about/people
+Collaborators: https://www.tropicallinedesign.com/about/collaborators
+Awards: https://www.tropicallinedesign.com/about/awards
 
 ## Key Differentiators
 - 34+ years of experience in tropical landscape design

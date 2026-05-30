@@ -68,7 +68,7 @@ After verification:
 
 Copy `.env.example` to `.env` and fill in:
 ```bash
-NEXT_PUBLIC_SITE_URL=https://tropicallinedesigns.com
+NEXT_PUBLIC_SITE_URL=https://www.tropicallinedesign.com
 NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION=your-code-here
 ```
 

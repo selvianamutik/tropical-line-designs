@@ -4,6 +4,7 @@ import { ProjectsSimpleFooter } from "@/components/global/projects-simple-footer
 import { ProjectsGridPage } from "@/components/projects/projects-grid-page";
 import { listPublicProjects } from "@/lib/public/projects";
 import { StructuredData } from "@/components/seo/StructuredData";
+import { SITE_URL } from "@/lib/seo";
 
 export const metadata: Metadata = {
   title: "Projects Portfolio - Tropical Line Designs",
@@ -29,13 +30,13 @@ export default async function ProjectsPage() {
         "@type": "ListItem",
         position: 1,
         name: "Home",
-        item: process.env.NEXT_PUBLIC_SITE_URL || "https://www.tropicallinedesign.com",
+        item: SITE_URL,
       },
       {
         "@type": "ListItem",
         position: 2,
         name: "Projects",
-        item: `${process.env.NEXT_PUBLIC_SITE_URL || "https://www.tropicallinedesign.com"}/projects`,
+        item: `${SITE_URL}/projects`,
       },
     ],
   };

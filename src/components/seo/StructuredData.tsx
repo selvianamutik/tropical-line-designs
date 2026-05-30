@@ -1,4 +1,5 @@
 import Script from 'next/script';
+import { absoluteUrl, ORGANIZATION_LOGO_PATH, SITE_URL } from '@/lib/seo';
 
 interface StructuredDataProps {
   type: 'organization' | 'website' | 'breadcrumb' | 'project';
@@ -6,7 +7,12 @@ interface StructuredDataProps {
 }
 
 export function StructuredData({ type, data = {} }: StructuredDataProps) {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://tropicallinedesigns.com';
+  const baseUrl = SITE_URL;
+  const sameAs = [
+    'https://www.instagram.com/tropicallinedesign/',
+    data.instagramUrl,
+    data.linkedinUrl,
+  ].filter((value): value is string => typeof value === 'string' && value.length > 0);
 
   const schemas: Record<string, unknown> = {
     organization: {
@@ -15,7 +21,7 @@ export function StructuredData({ type, data = {} }: StructuredDataProps) {
       name: 'Tropical Line Designs',
       alternateName: 'TLD',
       url: baseUrl,
-      logo: `${baseUrl}/logo/logo.png`,
+      logo: absoluteUrl(ORGANIZATION_LOGO_PATH),
       description: 'Premier landscape architecture firm specializing in tropical resort, hotel, and villa design in Bali, Indonesia since 1990',
       foundingDate: '1990',
       founder: {
@@ -28,10 +34,7 @@ export function StructuredData({ type, data = {} }: StructuredDataProps) {
         addressCountry: 'ID',
         addressRegion: 'Bali',
       },
-      sameAs: [
-        data.instagramUrl || '',
-        data.linkedinUrl || '',
-      ].filter(Boolean),
+      sameAs,
       areaServed: {
         '@type': 'Country',
         name: 'Indonesia',
@@ -59,14 +62,6 @@ export function StructuredData({ type, data = {} }: StructuredDataProps) {
       name: 'Tropical Line Designs',
       url: baseUrl,
       description: 'Landscape architecture and construction services for tropical resorts, hotels, and villas in Indonesia',
-      potentialAction: {
-        '@type': 'SearchAction',
-        target: {
-          '@type': 'EntryPoint',
-          urlTemplate: `${baseUrl}/projects?search={search_term_string}`,
-        },
-        'query-input': 'required name=search_term_string',
-      },
     },
     breadcrumb: {
       '@context': 'https://schema.org',

@@ -1,5 +1,22 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import { listPublicAwards } from "@/lib/public/awards";
+import { getAboutRouteMetadata } from "@/lib/seo";
+
+const awardsMetadata = getAboutRouteMetadata("/about/awards");
+
+export const metadata: Metadata = {
+  title: awardsMetadata?.title,
+  description: awardsMetadata?.description,
+  alternates: {
+    canonical: "/about/awards",
+  },
+  openGraph: {
+    title: awardsMetadata?.title,
+    description: awardsMetadata?.description,
+    url: "/about/awards",
+  },
+};
 
 export default async function AboutAwardsPage() {
   const awards = await listPublicAwards();

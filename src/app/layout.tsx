@@ -3,6 +3,7 @@ import { Inter, Manrope } from "next/font/google";
 import { IntroStorageReset } from "@/components/global/intro-storage-reset";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { StructuredData } from "@/components/seo/StructuredData";
+import { SITE_URL, SOCIAL_IMAGE } from "@/lib/seo";
 import "./globals.css";
 
 const inter = Inter({
@@ -16,7 +17,7 @@ const manrope = Manrope({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://tropicallinedesigns.com'),
+  metadataBase: new URL(SITE_URL),
   title: {
     default: "Tropical Line Designs - Landscape Architecture Bali Indonesia",
     template: "%s | Tropical Line Designs",
@@ -60,10 +61,10 @@ export const metadata: Metadata = {
       "Premier landscape architecture firm in Bali since 1990. Specializing in tropical resort, hotel & villa landscape design and construction.",
     images: [
       {
-        url: "/logo/logo.png",
-        width: 1200,
-        height: 630,
-        alt: "Tropical Line Designs",
+        url: SOCIAL_IMAGE.url,
+        width: SOCIAL_IMAGE.width,
+        height: SOCIAL_IMAGE.height,
+        alt: SOCIAL_IMAGE.alt,
       },
     ],
   },
@@ -72,7 +73,7 @@ export const metadata: Metadata = {
     title: "Tropical Line Designs - Landscape Architecture Bali Indonesia",
     description:
       "Premier landscape architecture firm in Bali since 1990. Specializing in tropical resort, hotel & villa landscape design and construction.",
-    images: ["/logo/logo.png"],
+    images: [SOCIAL_IMAGE.url],
   },
   robots: {
     index: true,

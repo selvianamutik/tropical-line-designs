@@ -1,8 +1,16 @@
+import type { Metadata } from "next";
 import { Search } from "lucide-react";
 import { AdminToastProvider } from "@/components/admin/admin-toast";
 import { AdminSidebar } from "@/components/admin/admin-sidebar";
 import { AdminUserMenu } from "@/components/admin/admin-user-menu";
 import { requireAdmin } from "@/lib/admin/auth";
+
+export const metadata: Metadata = {
+  robots: {
+    index: false,
+    follow: false,
+  },
+};
 
 export default async function AdminLayout({
   children,

@@ -1,5 +1,22 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import { listPublicCollaborators } from "@/lib/public/collaborators";
+import { getAboutRouteMetadata } from "@/lib/seo";
+
+const collaboratorsMetadata = getAboutRouteMetadata("/about/collaborators");
+
+export const metadata: Metadata = {
+  title: collaboratorsMetadata?.title,
+  description: collaboratorsMetadata?.description,
+  alternates: {
+    canonical: "/about/collaborators",
+  },
+  openGraph: {
+    title: collaboratorsMetadata?.title,
+    description: collaboratorsMetadata?.description,
+    url: "/about/collaborators",
+  },
+};
 
 export default async function AboutCollaboratorsPage() {
   const collaborators = await listPublicCollaborators();

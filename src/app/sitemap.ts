@@ -1,8 +1,9 @@
 import { MetadataRoute } from 'next';
 import { listPublicProjects } from '@/lib/public/projects';
+import { ABOUT_ROUTE_METADATA, SITE_URL } from '@/lib/seo';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://tropicallinedesigns.com';
+  const baseUrl = SITE_URL;
   
   // Get all projects for dynamic URLs
   const projects = await listPublicProjects();
@@ -27,6 +28,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: 'monthly',
       priority: 0.9,
     },
+    ...ABOUT_ROUTE_METADATA.map((route) => ({
+      url: `${baseUrl}${route.path}`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly' as const,
+      priority: 0.7,
+    })),
     {
       url: `${baseUrl}/projects`,
       lastModified: new Date(),
