@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { TeamMemberPortrait } from "@/components/about/team-member-portrait";
 import { listPublicTeamMembers } from "@/lib/public/about";
-import { getAboutRouteMetadata } from "@/lib/seo";
+import { getAboutRouteMetadata, SOCIAL_IMAGE } from "@/lib/seo";
 
 const peopleMetadata = getAboutRouteMetadata("/about/people");
 
@@ -15,6 +15,7 @@ export const metadata: Metadata = {
     title: peopleMetadata?.title,
     description: peopleMetadata?.description,
     url: "/about/people",
+    images: [SOCIAL_IMAGE],
   },
 };
 

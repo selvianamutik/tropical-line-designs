@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import { listPublicServices } from "@/lib/public/services";
-import { getAboutRouteMetadata } from "@/lib/seo";
+import { getAboutRouteMetadata, SOCIAL_IMAGE } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
 
@@ -17,6 +17,7 @@ export const metadata: Metadata = {
     title: servicesMetadata?.title,
     description: servicesMetadata?.description,
     url: "/about/services",
+    images: [SOCIAL_IMAGE],
   },
 };
 

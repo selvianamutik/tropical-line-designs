@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import { listPublicAwards } from "@/lib/public/awards";
-import { getAboutRouteMetadata } from "@/lib/seo";
+import { getAboutRouteMetadata, SOCIAL_IMAGE } from "@/lib/seo";
 
 const awardsMetadata = getAboutRouteMetadata("/about/awards");
 
@@ -15,6 +15,7 @@ export const metadata: Metadata = {
     title: awardsMetadata?.title,
     description: awardsMetadata?.description,
     url: "/about/awards",
+    images: [SOCIAL_IMAGE],
   },
 };
 

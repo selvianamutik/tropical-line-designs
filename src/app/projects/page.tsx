@@ -4,7 +4,7 @@ import { ProjectsSimpleFooter } from "@/components/global/projects-simple-footer
 import { ProjectsGridPage } from "@/components/projects/projects-grid-page";
 import { listPublicProjects } from "@/lib/public/projects";
 import { StructuredData } from "@/components/seo/StructuredData";
-import { SITE_URL } from "@/lib/seo";
+import { SITE_URL, SOCIAL_IMAGE } from "@/lib/seo";
 
 export const metadata: Metadata = {
   title: "Projects Portfolio - Tropical Line Designs",
@@ -16,6 +16,7 @@ export const metadata: Metadata = {
     title: "Projects Portfolio - Tropical Line Designs",
     description: "Explore our portfolio of luxury resort, hotel, and villa landscape projects across Indonesia.",
     url: "/projects",
+    images: [SOCIAL_IMAGE],
   },
 };
 
